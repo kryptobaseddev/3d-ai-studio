@@ -1,0 +1,605 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "purpose": "Code-grounded proportional + feature guide so a CSG agent authors RECOGNIZABLE, on-style models. Ship as plugin reference JSON.",
+    "units": "All spatial values are RATIOS, not mm. Two reference units: H = head height (head-unit); T = total figurine height. Agent picks target T (or H), then multiplies. For animals/figures H is primary; for objects (rocket/tree/car) T is primary.",
+    "head_count_baselines": {
+      "realistic_adult": "7.5H tall, head=13% of T",
+      "heroic": "8H",
+      "child": "4-5H",
+      "chibi": "2-2.5H, head=40-50% of T",
+      "cute_animal": "1.5-3H tall, head oversized"
+    },
+    "style_axis": {
+      "realism": "anatomically-weighted, smaller eyes, longer limbs, more primitives + hull/loft",
+      "cartoonish": "exaggerate the 2-3 signature cues, smooth blobs",
+      "anime": "huge eyes, small nose/mouth, sleek",
+      "low_poly": "replace smooth solids with prism/wedge/box facets, no fillets",
+      "chibi": "head 33-50% of T, 1:1 leg:head, thick stubby limbs, no neck",
+      "geometric": "pure primitives, minimal booleans, readable as logo silhouette"
+    },
+    "eye_rule": "Cute/anime per-eye diameter = 0.18-0.28 of FACE WIDTH; both eyes + gap span 0.55-0.70 of face width. Realistic per-eye = 0.10-0.14 of face width. Eyes sit on the horizontal midline of the head (lower for cuter). Pupils carved as difference() spheres at 0.40-0.50 of eye diameter.",
+    "universal_method": "1) lock head-unit H and total T from style head-count. 2) block body mass. 3) place head. 4) add the 4-6 silhouette cues AS RATIOS OF H. 5) carve eyes/mouth via difference. 6) ensure a flat base (.on_bed) and >=2mm features for print. Silhouette test: does the BLACK OUTLINE alone read as the subject?",
+    "print_constraints": {
+      "min_feature": "2mm wall/protrusion",
+      "ear_tuft_horn_thickness": ">=3mm base",
+      "must_stand": "widen base or add feet so center-of-mass is over footprint",
+      "overhang": "keep beaks/arms <=45deg or thicken"
+    },
+    "owl_failure_diagnosis": "The shipped owl uses absolute mm with no H-unit, eyes d=20 on head d=46 (0.43 of face, reads beady not cute), facial disc too thin, no silhouette checklist. Fix: head d -> 1.0H, eyes combined span 0.62*face, big facial disc, prominent ear tufts, beak 0.18H."
+  },
+  "owl": {
+    "silhouette_cues": [
+      "upright rounded egg body, no neck",
+      "large flat facial disc framing two big forward eyes",
+      "two ear tufts angled outward on top",
+      "short downward triangular beak between eyes",
+      "small stubby feet at base"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 3.2,
+        "head_ratio": "head = 0.9H wide, merges into body",
+        "eye_per_eye": "0.13 of face width, forward-facing",
+        "ear_tufts_H": 0.5,
+        "beak_H": 0.15,
+        "body_widest_at": "0.35T"
+      },
+      "cartoon": {
+        "total_H": 2.2,
+        "head_ratio": "head = 1.0H, ~45% of T",
+        "eye_per_eye": "0.26 of face width; combined span 0.62 of face",
+        "ear_tufts_H": 0.7,
+        "beak_H": 0.18,
+        "body": "rounded teardrop, wider at base"
+      }
+    },
+    "csg_recipe": "body = ellipsoid(0.55H,0.48H,0.85H); head = sphere(d=1.0H) on top, union (no neck); facial_disc = flattened ellipsoid(0.50H wide,0.12H deep,0.42H tall) unioned on front of head; 2x eye = sphere(d=0.30H) raised on disc, then difference pupil sphere(d=0.13H); beak = cone(h=0.18H) rotate_x(-90) below eyes; 2x ear_tuft = cone(h=0.55H,d=0.18H) rotate_y(+/-18) on head top; 2x foot = ellipsoid at base; 2x wing = flattened ellipsoid(0.14H,0.36H,0.6H) hugging sides. .on_bed()",
+    "pitfalls": "Don't make eyes <0.5 combined face span (owl reads as generic bird). Tufts must clear head silhouette by >=0.3H."
+  },
+  "cat": {
+    "silhouette_cues": [
+      "two sharp triangular pointed ears",
+      "slim or bean body",
+      "long curving tail",
+      "small triangular nose + whisker suggestion",
+      "compact rounded head"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 4.5,
+        "head_ratio": 1.0,
+        "ear_H": 0.6,
+        "ear_shape": "tall narrow triangle",
+        "tail_len": "2.2H, S-curve",
+        "eye_per_eye": "0.12 of face, almond",
+        "leg_len": "1.6H"
+      },
+      "cartoon": {
+        "total_H": 2.5,
+        "head_ratio": "1.4H (oversized)",
+        "ear_H": 0.8,
+        "tail_len": "1.8H upward curl",
+        "eye_per_eye": "0.24 of face, round; span 0.6",
+        "leg_len": "0.7H stubby",
+        "body": "bean / two-ball"
+      }
+    },
+    "csg_recipe": "body = capsule or two stacked spheres (bean); head = sphere(d=1.4H cartoon); 2x ear = cone(h=0.7H,d=0.4H base) OR wedge, on head top, rotate_y(+/-15); muzzle = small ellipsoid front; nose = tiny cone(h=0.06H) rotate_x(-90); tail = swept torus-arc or bent capsule(len 1.8H); 4x leg = capsule(d=0.3H). Whiskers: skip (too thin to print) or thick prism slivers >=2mm. .on_bed()",
+    "pitfalls": "Ears MUST be sharp triangles, not rounded (rounded ears -> reads as bear/dog). Keep ears separated, not fused into a single ridge."
+  },
+  "dog": {
+    "silhouette_cues": [
+      "pronounced snout/muzzle projecting forward",
+      "ears: floppy down (hound) OR perked triangle (shepherd) - pick one",
+      "blockier body than cat",
+      "tail (wagging up curve)",
+      "four sturdy legs"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 4.2,
+        "head_ratio": 1.0,
+        "muzzle_len": "0.5H forward",
+        "ear_len": "0.7H floppy",
+        "leg_len": "1.5H",
+        "body_len": "2.5H"
+      },
+      "cartoon": {
+        "total_H": 2.6,
+        "head_ratio": "1.5H big",
+        "muzzle_len": "0.4H",
+        "ear_len": "0.9H floppy or 0.6H perked",
+        "leg_len": "0.6H stubby",
+        "eye_per_eye": "0.22 of face"
+      }
+    },
+    "csg_recipe": "body = rounded_box or capsule(len 1.6H); head = sphere(d=1.5H); muzzle = ellipsoid(0.5H,0.4H,0.35H) unioned forward+down of head; nose = sphere(d=0.18H) on muzzle tip; 2x floppy_ear = flattened ellipsoid(0.15H,0.4H,0.7H) drooping at head sides OR 2x perked = cone; tail = bent capsule up; 4x leg = capsule(d=0.32H). .on_bed()",
+    "pitfalls": "Snout is THE dog cue - without a projecting muzzle a dog reads as a bear or generic blob. Don't give a cat-style slim body."
+  },
+  "fox": {
+    "silhouette_cues": [
+      "large pointed upright triangular ears (proportionally bigger than cat)",
+      "narrow pointed snout",
+      "very large bushy tail (often white-tipped)",
+      "slender body",
+      "pointed black-stocking feet"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 4.0,
+        "head_ratio": 1.0,
+        "ear_H": 0.75,
+        "snout_len": "0.55H sharp",
+        "tail": "2.0H bushy, thicker than cat tail (d=0.5H)",
+        "leg_len": "1.4H"
+      },
+      "cartoon": {
+        "total_H": 2.4,
+        "head_ratio": "1.4H",
+        "ear_H": 0.95,
+        "snout_len": "0.4H",
+        "tail": "1.6H very bushy d=0.7H, curling up",
+        "eye_per_eye": "0.22 of face, slightly slanted"
+      }
+    },
+    "csg_recipe": "body = capsule(len 1.4H); head = sphere(d=1.4H) with wedge/ellipsoid snout forward; 2x ear = tall cone(h=0.95H,d=0.45H) on head top, more vertical than cat; tail = large bushy ellipsoid(0.7H,0.7H,1.6H) tapering, sweeping up behind; snout tip = small cone nose. .on_bed()",
+    "pitfalls": "The bushy oversized tail + big pointed ears separate fox from cat. Make tail diameter clearly fatter than cat (0.5-0.7H)."
+  },
+  "rabbit": {
+    "silhouette_cues": [
+      "two TALL upright ears (dominant cue, longest feature)",
+      "round compact body crouched",
+      "small round cotton tail at back",
+      "short front paws, larger hind feet",
+      "twitchy small triangular nose"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_with_ears_H": 4.5,
+        "ear_len": "1.5H (longer than head!)",
+        "head_ratio": 1.0,
+        "body": "crouched oval 1.5H",
+        "hind_foot_len": "0.8H"
+      },
+      "cartoon": {
+        "total_with_ears_H": 3.5,
+        "ear_len": "1.6H (exaggerate)",
+        "head_ratio": "1.3H",
+        "body": "round ball 1.2H",
+        "tail": "sphere d=0.3H at back",
+        "eye_per_eye": "0.24 of face"
+      }
+    },
+    "csg_recipe": "body = sphere/ellipsoid(1.2H) crouched; head = sphere(d=1.3H) front-top, slight union; 2x ear = capsule or flattened ellipsoid(0.25H wide,0.12H deep,1.6H tall) standing vertical, slight V-splay; nose = tiny sphere; cotton tail = sphere(d=0.3H) at rear; 2x hind_foot = ellipsoid flat at base for standing; 2x front_paw = small capsule. .on_bed()",
+    "pitfalls": "Ears must be the tallest element and clearly longer than the head, or it reads as a cat/mouse. Keep ears vertical not floppy (floppy = dog)."
+  },
+  "bear": {
+    "silhouette_cues": [
+      "small ROUND ears low/wide on a big round head",
+      "bulky heavy rounded body mass",
+      "short thick stubby limbs",
+      "short snout (shorter than dog)",
+      "no/short tail"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 4.0,
+        "head_ratio": 1.0,
+        "ear": "round d=0.35H, set wide",
+        "snout_len": "0.3H short",
+        "limb": "thick, len 1.3H, d=0.5H",
+        "body": "barrel 2.2H"
+      },
+      "cartoon": {
+        "total_H": 2.3,
+        "head_ratio": "1.5H round",
+        "ear": "round d=0.5H, on top corners",
+        "snout_len": "0.25H",
+        "limb": "0.7H very thick d=0.6H",
+        "eye_per_eye": "0.20 of face (teddy)"
+      }
+    },
+    "csg_recipe": "body = large sphere or rounded_box(barrel) 1.8H wide; head = sphere(d=1.5H); 2x ear = sphere(d=0.5H) ROUND, half-embedded at head top corners; muzzle = short ellipsoid(0.3H) + nose sphere(d=0.15H); 4x limb = thick capsule(d=0.6H,len 0.7H); optional belly = lighter ellipsoid panel. .on_bed()",
+    "pitfalls": "Ears MUST be round spheres (pointed = cat/fox). Keep limbs thick and short; thin limbs make it read as a dog/human. Round everything - bear = softness."
+  },
+  "dragon": {
+    "silhouette_cues": [
+      "large bat-like membrane wings (signature cue)",
+      "serpentine curved neck + long tail",
+      "horns sweeping back on head",
+      "spinal ridge spikes/scales",
+      "clawed feet, often bipedal t-rex-like stance"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 5.0,
+        "head_ratio": 1.0,
+        "neck_len": "1.5H curved",
+        "tail_len": "3H tapering",
+        "wing_span": "3-4H each",
+        "horn_len": "0.6H back-swept",
+        "leg_len": "1.8H"
+      },
+      "cartoon": {
+        "total_H": 3.0,
+        "head_ratio": "1.5H",
+        "neck_len": "1.0H",
+        "tail_len": "2H",
+        "wing_span": "2H rounded",
+        "belly": "round pot belly",
+        "eye_per_eye": "0.22 of face"
+      }
+    },
+    "csg_recipe": "Base on t-rex body. body = ellipsoid(1.5H); neck = bent tube/capsule curving up to head = sphere(d=1.4H); 2x horn = cone(h=0.6H) swept back on head; 2x wing = membrane via loft or hull of 3-4 points, or flattened wedge fan; spinal_ridge = row of small cone/wedge spikes unioned along back via loop; tail = tapering bent tube 2-3H; 2x hind_leg = thick capsule with clawed foot; 2x tiny arm. .on_bed()",
+    "pitfalls": "Without wings + horns + spinal spikes, a dragon reads as a t-rex or lizard. Wings are the #1 cue - make them large and visible in silhouette."
+  },
+  "trex": {
+    "silhouette_cues": [
+      "large head with big jaws + small triangle teeth",
+      "tiny front arms (comedy-small)",
+      "two powerful hind legs with chunky clawed feet",
+      "heavy horizontal tail balancing the head",
+      "bulky oval body tilted forward (spine roughly horizontal)"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_len_H": 6.0,
+        "head_len": "1.3H large",
+        "arm_len": "0.4H tiny",
+        "hind_leg_len": "2.0H",
+        "tail_len": "2.8H",
+        "stance": "horizontal spine, head forward over feet"
+      },
+      "cartoon": {
+        "total_H": 2.8,
+        "head_ratio": "1.6H huge",
+        "arm_len": "0.3H comedic",
+        "hind_leg_len": "1.0H",
+        "tail_len": "1.8H",
+        "eye_per_eye": "0.2 of face, big round"
+      }
+    },
+    "csg_recipe": "body = large ellipsoid(1.4H) tilted forward; head = ellipsoid(1.3H) with jaw = lower ellipsoid, teeth = row of small cones via loop (difference for mouth gap); 2x arm = tiny capsule(0.3-0.4H) high on chest; 2x hind_leg = thick bent capsule(2H) with foot = flattened ellipsoid + 3 claw cones; tail = long tapering tube(2.5H) horizontal back. Balance over feet for standing. .on_bed()",
+    "pitfalls": "Tiny arms + big head + balancing tail are the trio. Don't stand it fully upright/vertical (that's the outdated Godzilla pose); modern read is horizontal spine. Keep arms ABSURDLY small."
+  },
+  "fish": {
+    "silhouette_cues": [
+      "streamlined teardrop/oval body",
+      "prominent triangular tail fin (caudal)",
+      "dorsal fin on top + pectoral side fins",
+      "gill line + round eye on side of head",
+      "puckered or open mouth at front"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_len_H": 3.0,
+        "body_len": "2.2H teardrop",
+        "tail_fin": "0.8H forked",
+        "dorsal_fin_len": "0.8H",
+        "eye_per_eye": "0.15 of head side",
+        "body_depth": "0.8H"
+      },
+      "cartoon": {
+        "total_len_H": 2.0,
+        "body": "round fat 1.4H",
+        "tail_fin": "0.7H fan",
+        "eye_per_eye": "0.3 of head (huge, bubbly)",
+        "lips": "exaggerated puckered torus"
+      }
+    },
+    "csg_recipe": "body = ellipsoid(2.2H,0.6H,0.9H) teardrop (taper toward tail); tail_fin = flattened wedge or two triangles (prism) forked; dorsal_fin = wedge/prism on top edge; 2x pectoral_fin = thin flattened ellipsoid on sides; eye = sphere(d) on each side with carved pupil; mouth = small torus or difference notch at front; gill = shallow difference groove. Stand on a small base or lay flat. .on_bed()",
+    "pitfalls": "Body must taper toward the tail (teardrop), not be symmetric. Fins are thin - thicken to >=2mm or use wedge prisms for printability."
+  },
+  "bird": {
+    "silhouette_cues": [
+      "round/oval body with no visible neck (songbird) ",
+      "small pointed beak",
+      "fan or pointed tail angled up/back",
+      "two folded wings on sides",
+      "thin legs OR perched stance",
+      "round eye on side of head"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 2.8,
+        "head_ratio": 0.8,
+        "beak_len": "0.3H pointed",
+        "tail_len": "1.0H",
+        "body": "oval 1.5H",
+        "leg_len": "0.6H thin"
+      },
+      "cartoon": {
+        "total_H": 1.8,
+        "head_ratio": "1.1H (chunky)",
+        "beak_len": "0.25H",
+        "tail": "short fan 0.6H",
+        "body": "round ball 1.2H",
+        "eye_per_eye": "0.25 of face"
+      }
+    },
+    "csg_recipe": "body = ellipsoid/sphere(1.2-1.5H); head = sphere(d) merged on top-front (no neck for songbird); beak = cone(h=0.25-0.3H) rotate_x(-90) forward; 2x wing = flattened ellipsoid hugging sides, pointed back; tail = flattened wedge/prism fan angled up; 2x leg = thin capsule OR sit on belly base; 2x eye sphere on sides. .on_bed()",
+    "pitfalls": "Beak forward + tail up are minimal cues. Distinguish from owl: bird beak smaller/forward, eyes on SIDES (not big forward facial disc), no ear tufts."
+  },
+  "frog": {
+    "silhouette_cues": [
+      "two large bulging eyes ON TOP of a wide flat head",
+      "wide grinning mouth line across the front",
+      "squat wide crouched body",
+      "long folded bent hind legs (knees up beside body)",
+      "splayed webbed front feet"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 2.0,
+        "head_width": "1.5H wide flat",
+        "eye_bulge": "0.4H spheres on top",
+        "body": "squat 1.2H wide",
+        "hind_leg": "folded Z, 1.5H extended",
+        "mouth": "wide line 0.9 of head width"
+      },
+      "cartoon": {
+        "total_H": 1.6,
+        "head": "very wide 1.8H",
+        "eye_bulge": "0.5H huge domes on top",
+        "mouth": "huge grin",
+        "body": "round squat"
+      }
+    },
+    "csg_recipe": "body = wide flattened ellipsoid(1.4H,1.0H,0.8H) squat; head = front portion of body (low, wide); 2x eye = sphere(d=0.4-0.5H) UNIONED on TOP of head (bulging up), carve pupil; mouth = wide shallow difference cut (slot/wedge) across front; 2x hind_leg = bent capsules folded beside body, foot = splayed flattened ellipsoid with webbing; 2x front_foot = small splayed. Wide flat base. .on_bed()",
+    "pitfalls": "Eyes ON TOP of head (not on front) is THE frog cue - placing eyes on the front makes it read as a generic blob. Keep body wide and squat, never tall."
+  },
+  "robot": {
+    "silhouette_cues": [
+      "boxy/cylindrical head distinct from torso (visible neck joint)",
+      "rectangular boxy torso with chest panel",
+      "segmented cylindrical/boxy limbs with joint balls",
+      "antennae OR single glowing eye/visor",
+      "hard 90-degree edges, panel lines, bolts - mechanical not organic"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 6.0,
+        "head_ratio": 1.0,
+        "torso": "1.8H tall box",
+        "limb_len": "2H segmented",
+        "neck": "0.3H cylinder"
+      },
+      "cartoon": {
+        "total_H": 3.0,
+        "head_ratio": "1.4H big box",
+        "torso": "1.2H",
+        "limb_len": "0.9H stubby segments",
+        "eye": "single visor or 2 round lights 0.25 of face"
+      }
+    },
+    "csg_recipe": "head = box or rounded_box or cylinder; neck = short cylinder; torso = box(1.2-1.8H) with chest_panel = shallow difference rectangle; 2x arm = cylinder segments + sphere joints (shoulder/elbow); 2x leg = box/cylinder segments + sphere knees; antenna = thin cylinder + sphere tip; eye = cylinder visor or 2 spheres; add bolts = small cylinders, panel_lines = shallow difference grooves. Flat box feet. .on_bed()",
+    "pitfalls": "Robots need HARD edges and visible joints - smooth blobby robots read as toys. Use box/cylinder, AVOID ellipsoid/sphere for body. Add at least 3 mechanical details (panel/bolt/antenna)."
+  },
+  "human_bust": {
+    "silhouette_cues": [
+      "head with clear face plane (brow, nose ridge, chin)",
+      "neck transitioning into shoulders",
+      "shoulder/upper-chest mass cut flat at the bottom (bust base)",
+      "hair mass distinct from skull",
+      "balanced facial feature placement on thirds"
+    ],
+    "proportions": {
+      "realistic": {
+        "face_thirds": "hairline->brow, brow->nose-base, nose-base->chin each = 1/3 of face height",
+        "eye_line": "at vertical midline of head; eyes 1 eye-width apart; face = 5 eyes wide",
+        "eye_per_eye": "0.12-0.14 of face width",
+        "nose_len": "1/3 face",
+        "neck_width": "0.6 of head width",
+        "shoulder_width": "2.0H across"
+      },
+      "cartoon": {
+        "head_ratio": "1.2H stylized",
+        "eye_per_eye": "0.2 of face",
+        "anime_eye": "0.3 of face, on/below midline",
+        "nose": "minimal",
+        "shoulder_width": "1.6H"
+      }
+    },
+    "csg_recipe": "skull = sphere slightly ellipsoidal; face = front carved/added planes: brow ridge (ellipsoid), nose = wedge/prism ridge forward, chin = lower ellipsoid; eyes = carved spheres on midline (difference sockets + sphere eyeballs); hair = larger sphere/loft shell unioned over back of skull (difference face area); neck = cylinder; shoulders = wide ellipsoid/loft; cut flat bottom with box difference for bust base. .on_bed()",
+    "pitfalls": "Feature placement on the thirds + eyes-at-midline is critical; misplaced eyes (too high) is the #1 uncanny error. The bottom MUST be cut flat (it's a bust, not a full body)."
+  },
+  "snowman": {
+    "silhouette_cues": [
+      "three stacked spheres, large->medium->small bottom to top",
+      "carrot (cone) nose pointing forward",
+      "coal dots for eyes + smile (carved or small spheres)",
+      "stick arms OR no arms",
+      "optional top hat (cylinder + brim disc)"
+    ],
+    "proportions": {
+      "realistic": {
+        "sphere_ratio": "8:5:3 bottom:middle:head (Fibonacci/golden) OR simple 3:2:1",
+        "nose_len": "0.4 of head diameter",
+        "eye_per_eye": "0.12 of head",
+        "total_H": "sum of 3 diameters ~stacked with slight overlap"
+      },
+      "cartoon": {
+        "sphere_ratio": "3:2:1 (simple, chunky)",
+        "head_bigger": "use 5:4:3 for cuter big head",
+        "nose_len": "0.5 of head",
+        "eye_per_eye": "0.18 of head"
+      }
+    },
+    "csg_recipe": "bottom = sphere(d=8u); middle = sphere(d=5u) stacked (center at bottom_top - small overlap); head = sphere(d=3u) on top; union all three; nose = cone(h=0.5*head_d) rotate_x(-90) forward on head; 2x eye = small sphere or difference dot; mouth = row of small difference dots in arc; 2x arm = thin cylinder sticks angled out from middle; optional hat = cylinder + thin disc brim. .on_bed()",
+    "pitfalls": "Spheres must clearly decrease in size bottom-to-top (equal spheres read as a caterpillar/blob). Overlap spheres ~10-15% so the union is solid and printable, not pinched."
+  },
+  "ghost": {
+    "silhouette_cues": [
+      "rounded dome top (head) flowing into a wider body with NO neck",
+      "wavy/scalloped bottom hem (the floating tail)",
+      "two simple oval/round eyes",
+      "open oval mouth (O shape)",
+      "optional stubby side arms reaching out"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 2.0,
+        "dome_d": "1.0H",
+        "body_flare": "widens to 1.3H at base",
+        "eye_per_eye": "0.2 of face",
+        "hem_waves": "3-5 scallops"
+      },
+      "cartoon": {
+        "total_H": 1.8,
+        "dome": "big round 1.2H",
+        "eye_per_eye": "0.25 of face",
+        "mouth": "large O",
+        "hem_waves": "3 big rounded scallops"
+      }
+    },
+    "csg_recipe": "body = capsule or revolve of a bell profile (dome top -> flared skirt); OR sphere(head) unioned with a downward-flaring cone/tube; bottom_hem = subtract 3-5 spheres in a row along the base to create scallop waves (difference); 2x eye = difference oval sockets or small carved spheres; mouth = difference sphere/torus O-shape; optional 2x arm = capsule stubs. Hollow optional (tube) but keep walls >=2mm. Flat-ish base from scallop low points. .on_bed()",
+    "pitfalls": "The scalloped wavy bottom hem is THE ghost cue - a flat-bottomed dome reads as a tooth or a generic blob. Carve 3+ waves."
+  },
+  "mushroom": {
+    "silhouette_cues": [
+      "dome/umbrella cap distinctly wider than stem",
+      "cylindrical stem narrower than cap, slightly bulged at base",
+      "spots on cap (toadstool) - raised or carved",
+      "gill lines under the cap rim",
+      "clear cap-to-stem overhang"
+    ],
+    "proportions": {
+      "realistic": {
+        "cap_d": "1.6-2.0x stem_d",
+        "cap_height": "0.5x cap_d (dome)",
+        "stem_H": "1.2-1.5x cap_d",
+        "stem_d": "0.35x cap_d",
+        "base_bulb": "1.2x stem_d"
+      },
+      "cartoon": {
+        "cap_d": "2.5x stem_d (big top-heavy)",
+        "cap_height": "0.6x cap_d",
+        "stem_H": "1.0x cap_d short fat",
+        "spots": "5-8 raised hemispheres 0.15x cap_d"
+      }
+    },
+    "csg_recipe": "cap = hemisphere (sphere clipped flat, or revolve of a dome arc); stem = cylinder(d=0.4*cap_d, h=stem_H) with slight base_bulb = small sphere at bottom; union; spots = small sphere bumps unioned on cap top (or difference dimples); gills = radial difference grooves under cap rim via loop; ensure cap overhangs stem clearly. Flat base from stem bottom. .on_bed()",
+    "pitfalls": "Cap MUST overhang the stem with a clear lip (cap same width as stem = reads as a lollipop/nail). Cap overhang is an overhang for printing - keep underside angle reasonable or it needs support."
+  },
+  "tree": {
+    "silhouette_cues": [
+      "foliage mass clearly distinct from trunk",
+      "conifer = stacked cones/triangle; deciduous = round/cloud canopy on a clear trunk",
+      "trunk narrower than canopy, widens at root base",
+      "optional branch stubs (deciduous)",
+      "tapered top (pointed for pine, rounded for oak)"
+    ],
+    "proportions": {
+      "realistic_conifer": {
+        "total_T": 1.0,
+        "trunk_H": "0.15T visible",
+        "foliage_H": "0.85T",
+        "base_cone_d": "0.45T",
+        "taper_to": "point at top"
+      },
+      "realistic_deciduous": {
+        "trunk_H": "0.4T",
+        "trunk_d": "0.12T",
+        "canopy_d": "0.7T",
+        "canopy_center": "0.7T up",
+        "root_flare": "1.5x trunk_d"
+      },
+      "cartoon": {
+        "conifer": "2-3 stacked cones decreasing, fat",
+        "deciduous": "1-3 overlapping spheres on a stubby trunk, lollipop"
+      }
+    },
+    "csg_recipe_conifer": "trunk = cylinder(short); foliage = 2-4 stacked cones decreasing in diameter going up (each base overlaps the one below); union. Low-poly: replace cones with prism (n=6). .on_bed()",
+    "csg_recipe_deciduous": "trunk = cylinder(d, h=0.4T) with root_flare = small cone at base; canopy = 1-3 overlapping spheres(d=0.5-0.7T) unioned on top; optional branch = thin cylinders. Low-poly: canopy = hull of several prisms. .on_bed()",
+    "pitfalls": "Trunk must be visibly thinner than canopy and the canopy must sit clearly above it. A cone with no trunk reads as a generic cone, not a tree - always show some trunk."
+  },
+  "rocket": {
+    "silhouette_cues": [
+      "pointed cone nose at top",
+      "tall cylindrical body",
+      "2-4 triangular fins flaring at the base",
+      "round porthole window(s)",
+      "optional flared nozzle + exhaust flames at bottom"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_T": 1.0,
+        "nose_cone_H": "0.2T",
+        "body_H": "0.65T",
+        "body_d": "0.25T",
+        "fin_H": "0.25T",
+        "fin_count": 3,
+        "window_d": "0.4x body_d at 0.6T up"
+      },
+      "cartoon": {
+        "body_d": "0.35T (fatter)",
+        "nose_cone_H": "0.25T",
+        "fin_H": "0.3T big swept",
+        "window": "large bubble 0.5x body_d"
+      }
+    },
+    "csg_recipe": "body = cylinder(d=0.25-0.35T, h=0.65T); nose = cone(h=0.2-0.25T, d=body_d) on top, union; 3-4x fin = wedge or prism triangles flaring out at base via rotational loop (rotate around axis); window = difference cylinder/sphere porthole (or raised torus ring); optional nozzle = inverted cone flare at bottom; flames (if wanted) = cone/teardrop union below, but usually omit for print. Stand on fins + body base. .on_bed()",
+    "pitfalls": "Fins at the base are essential for the rocket read AND for standing stability. Nose must be a sharp cone, not rounded (rounded = pill/capsule). 3 fins prints/stands better than 4 for a flat-render silhouette."
+  },
+  "car": {
+    "silhouette_cues": [
+      "horizontal body box longer than tall",
+      "cabin/greenhouse (windows) set on top, narrower than body",
+      "four wheels (cylinders) at the corners",
+      "wheel arches over the wheels",
+      "front/rear suggestion (hood, windshield slope)"
+    ],
+    "proportions": {
+      "realistic": {
+        "length_T": 1.0,
+        "body_height": "0.28T",
+        "cabin_height": "0.18T on top",
+        "ground_clearance": "0.06T",
+        "wheel_d": "0.18T",
+        "wheel_track": "0.85x width",
+        "cabin_len": "0.45x body_len set back",
+        "width": "0.4T"
+      },
+      "cartoon": {
+        "length_T": 1.0,
+        "body_height": "0.35T (taller/cuter)",
+        "cabin": "big bubble 0.25T",
+        "wheel_d": "0.25T oversized",
+        "headlights": "2 big round spheres front",
+        "stance": "chunky short"
+      }
+    },
+    "csg_recipe": "body = rounded_box(len=1.0, w=0.4, h=0.28); cabin = smaller rounded_box on top, set back, taper front (windshield) via wedge difference; windows = shallow difference panels; 4x wheel = cylinder(d) rotate_x(90) at corners, recessed slightly; 4x wheel_arch = difference cylinder cut into body over each wheel; headlights = 2 small spheres/cylinders front; hood = slope via wedge. Wheels touch bed. .on_bed()",
+    "pitfalls": "Cabin must be narrower and set back (not centered) to read as a car vs a box on wheels. Wheels must be visible past the body line. Add wheel arches or it looks like a brick."
+  },
+  "generic_figurine": {
+    "silhouette_cues": [
+      "clear head distinct from body",
+      "upright bipedal stance with flat base for standing",
+      "readable pose (arms/legs in a recognizable gesture)",
+      "balanced mass so it stands without tipping",
+      "consistent style head-count applied throughout"
+    ],
+    "proportions": {
+      "realistic": {
+        "total_H": 7.5,
+        "head_ratio": "1.0H (13% of T)",
+        "shoulder_w": "2H",
+        "leg_len": "3.75H (half of T)",
+        "arm_len": "3H",
+        "waist_at": "0.42T"
+      },
+      "chibi": {
+        "total_H": 2.5,
+        "head_ratio": "1.0H (~40% of T)",
+        "leg:head": "1:1",
+        "arm_len": "0.8H, no reach past hips",
+        "limbs": "thick stubby, no neck",
+        "eye_per_eye": "0.25 of face"
+      }
+    },
+    "csg_recipe": "head = sphere(d=1.0H); body/torso = capsule or rounded_box (1.0H chibi / 2.5H realistic); 2x arm = capsule(thick for chibi); 2x leg = capsule, ending in flat ellipsoid feet for standing; optional neck = short cylinder (omit for chibi); hair/hat = sphere/loft over skull; carve face eyes via difference. Ensure feet form a stable footprint; widen stance if top-heavy. .on_bed()",
+    "pitfalls": "Pick ONE head-count and apply it to every limb (mixing chibi head with realistic legs looks broken). Must stand: keep center-of-mass over the foot footprint - widen feet or stance for big-headed chibi."
+  }
+}

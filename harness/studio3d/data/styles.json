@@ -1,0 +1,223 @@
+{
+  "schema_version": "1.0",
+  "default_style": "stylized_clean",
+  "facet_level_map": {
+    "_doc": "Ordinal facet_level -> concrete DSL primitive args. Engine MUST thread these into sphere(subdivisions=), cylinder/cone/tube/revolve(sections=), and rounded_box (which currently HARDCODES subdivisions=2 \u2014 patch it to accept a corner_subdiv arg).",
+    "0": {
+      "sphere_subdiv": 0,
+      "round_sections": 4,
+      "ngon_sides": 4,
+      "rounded_box_subdiv": 0,
+      "sphere_faces": 20,
+      "cyl_faces": 16
+    },
+    "1": {
+      "sphere_subdiv": 0,
+      "round_sections": 6,
+      "ngon_sides": 6,
+      "rounded_box_subdiv": 0,
+      "sphere_faces": 20,
+      "cyl_faces": 24
+    },
+    "2": {
+      "sphere_subdiv": 1,
+      "round_sections": 8,
+      "ngon_sides": 8,
+      "rounded_box_subdiv": 1,
+      "sphere_faces": 80,
+      "cyl_faces": 32
+    },
+    "3": {
+      "sphere_subdiv": 2,
+      "round_sections": 16,
+      "ngon_sides": 12,
+      "rounded_box_subdiv": 1,
+      "sphere_faces": 320,
+      "cyl_faces": 64
+    },
+    "4": {
+      "sphere_subdiv": 3,
+      "round_sections": 32,
+      "ngon_sides": 24,
+      "rounded_box_subdiv": 2,
+      "sphere_faces": 1280,
+      "cyl_faces": 128
+    },
+    "5": {
+      "sphere_subdiv": 4,
+      "round_sections": 64,
+      "ngon_sides": 48,
+      "rounded_box_subdiv": 3,
+      "sphere_faces": 5120,
+      "cyl_faces": 256
+    }
+  },
+  "styles": {
+    "realistic": {
+      "aesthetic": "True-to-life proportions and surface; minimal exaggeration, smooth high-res curves, crisp anatomical detail.",
+      "head_body_ratio": 0.3,
+      "eye_size_mult": 1.0,
+      "feature_exaggeration": 1.0,
+      "facet_level": 5,
+      "edge_treatment": "sharp",
+      "fillet_radius_mm": 0.6,
+      "overall_roundness": 0.35,
+      "detail_density": 1.0,
+      "surface_relief_mult": 1.0,
+      "limb_taper": 1.0,
+      "primary_primitives": [
+        "ellipsoid",
+        "loft",
+        "revolve",
+        "sphere",
+        "rounded_box"
+      ],
+      "dsl_mapping": "sphere(subdivisions=4) / ellipsoid(...,subdivisions=3); cylinder(sections=64); revolve(sections=64); rounded_box(radius=0.6). Build organic masses with loft/revolve profiles, not stacked primitives. Keep head_body_ratio near anatomical 0.25-0.33."
+    },
+    "stylized_clean": {
+      "aesthetic": "Designer-toy clean: real proportions softened, smooth surfaces, generous fillets, no fine clutter. The safe default.",
+      "head_body_ratio": 0.42,
+      "eye_size_mult": 1.3,
+      "feature_exaggeration": 1.25,
+      "facet_level": 4,
+      "edge_treatment": "rounded",
+      "fillet_radius_mm": 2.0,
+      "overall_roundness": 0.65,
+      "detail_density": 0.7,
+      "surface_relief_mult": 1.2,
+      "limb_taper": 0.85,
+      "primary_primitives": [
+        "rounded_box",
+        "ellipsoid",
+        "sphere",
+        "capsule",
+        "hull"
+      ],
+      "dsl_mapping": "sphere(subdivisions=3); rounded_box(radius=2.0); prefer hull() to fuse masses into one clean silhouette. eye = sphere(d = base_eye_d * 1.30)."
+    },
+    "cartoonish": {
+      "aesthetic": "Big-head, big-eye, bouncy and rounded. Exaggerated friendly features, soft fat fillets, simplified detail.",
+      "head_body_ratio": 0.85,
+      "eye_size_mult": 1.8,
+      "feature_exaggeration": 1.6,
+      "facet_level": 3,
+      "edge_treatment": "rounded",
+      "fillet_radius_mm": 3.5,
+      "overall_roundness": 0.85,
+      "detail_density": 0.45,
+      "surface_relief_mult": 1.5,
+      "limb_taper": 0.7,
+      "primary_primitives": [
+        "sphere",
+        "ellipsoid",
+        "rounded_box",
+        "capsule",
+        "cone"
+      ],
+      "dsl_mapping": "head sphere(d) sized so head_d/body_h ~= 0.85; eyes = sphere(d = base_eye_d * 1.8) raised as bosses, pupils carved with sphere difference; rounded_box(radius=3.5); cylinder(sections=16)."
+    },
+    "anime": {
+      "aesthetic": "Sleek and angular-elegant: tall slim body, large almond eyes, sharp jaw/spike accents, smooth skin but crisp silhouette edges.",
+      "head_body_ratio": 0.38,
+      "eye_size_mult": 2.1,
+      "feature_exaggeration": 1.45,
+      "facet_level": 4,
+      "edge_treatment": "mixed",
+      "fillet_radius_mm": 1.2,
+      "overall_roundness": 0.5,
+      "detail_density": 0.85,
+      "surface_relief_mult": 1.3,
+      "limb_taper": 1.25,
+      "primary_primitives": [
+        "loft",
+        "ellipsoid",
+        "wedge",
+        "prism",
+        "sphere"
+      ],
+      "dsl_mapping": "almond eyes = sphere(d=base*2.1) then .scale([1.0,0.55,1.3]) for the slanted oval; hair/spikes = cone or wedge; slim body via loft with tapered rings (limb_taper 1.25 = elongate Z). Keep some sharp edges (wedge/prism) against smooth masses."
+    },
+    "chibi": {
+      "aesthetic": "Super-deformed: 1:1-ish head-to-body, tiny stubby limbs, huge eyes, maximum cuteness, almost no surface detail.",
+      "head_body_ratio": 1.0,
+      "eye_size_mult": 2.4,
+      "feature_exaggeration": 1.9,
+      "facet_level": 3,
+      "edge_treatment": "rounded",
+      "fillet_radius_mm": 4.0,
+      "overall_roundness": 0.95,
+      "detail_density": 0.3,
+      "surface_relief_mult": 1.6,
+      "limb_taper": 0.55,
+      "primary_primitives": [
+        "sphere",
+        "ellipsoid",
+        "capsule",
+        "rounded_box"
+      ],
+      "dsl_mapping": "head sphere as large as body mass (ratio ~1.0); limbs = short capsule(h small) with limb_taper 0.55 (stubby); eyes = sphere(d=base*2.4). Fuse everything with hull()/union into a single rotund blob. fillet 4.0."
+    },
+    "low_poly": {
+      "aesthetic": "Faceted crystalline look \u2014 deliberately few flat polygons, hard edges between facets, no smoothing.",
+      "head_body_ratio": 0.45,
+      "eye_size_mult": 1.4,
+      "feature_exaggeration": 1.3,
+      "facet_level": 1,
+      "edge_treatment": "sharp",
+      "fillet_radius_mm": 0.0,
+      "overall_roundness": 0.2,
+      "detail_density": 0.4,
+      "surface_relief_mult": 1.1,
+      "limb_taper": 0.8,
+      "primary_primitives": [
+        "sphere",
+        "cylinder",
+        "prism",
+        "cone",
+        "box"
+      ],
+      "dsl_mapping": "EVERY rounded mass MUST use the low facet args: sphere(subdivisions=0) = 20-face icosahedron; cylinder(sections=6) = 24 faces; cone(sections=6); prism(sides=6) for limbs/trunk. NEVER use rounded_box here (it hardcodes subdiv=2 -> 428 faces and breaks the look) \u2014 substitute box() or prism(). flat shading on render."
+    },
+    "geometric": {
+      "aesthetic": "Abstract primitive-built: subject reduced to recognizable arrangement of clean platonic shapes (cubes, cylinders, cones), modern/minimal.",
+      "head_body_ratio": 0.5,
+      "eye_size_mult": 1.2,
+      "feature_exaggeration": 1.15,
+      "facet_level": 2,
+      "edge_treatment": "sharp",
+      "fillet_radius_mm": 0.4,
+      "overall_roundness": 0.15,
+      "detail_density": 0.35,
+      "surface_relief_mult": 1.0,
+      "limb_taper": 1.0,
+      "primary_primitives": [
+        "box",
+        "cube",
+        "cylinder",
+        "cone",
+        "prism",
+        "torus"
+      ],
+      "dsl_mapping": "Compose the subject from a small set of distinct platonic solids kept VISUALLY SEPARATE (don't hull into one blob). box/cube for torso, cylinder(sections=8) for neck/limbs, cone for beak/ears, sphere(subdivisions=1) only for eyes. Minimal fillet 0.4 just to soften the print edge."
+    }
+  },
+  "exaggeration_application_rules": {
+    "_doc": "How an engine APPLIES the multipliers given a base proportional plan (e.g. from a reference guide).",
+    "head_body_ratio": "Target head_diameter = head_body_ratio * body_height. Scale the head primitive's d to hit this; reposition head atop body.",
+    "eye_size_mult": "eye_primitive_d = base_eye_d * eye_size_mult. Clamp so eye_d <= 0.55 * face_width to avoid eyes merging.",
+    "feature_exaggeration": "Multiply protrusion length of beaks/ears/noses/snouts (cone h, wedge depth) by this. Also multiplies eye_socket boss height.",
+    "overall_roundness": "0=keep primitive edges, 1=maximally rounded. Engine blends: roundness>0.6 -> swap box->rounded_box and union via hull(); roundness<0.3 -> keep box/prism, no hull.",
+    "limb_taper": ">1 elongates limbs along their long axis (scale Z of capsule/cylinder); <1 shortens+fattens (stubby).",
+    "surface_relief_mult": "Multiplies the protrusion/inset depth of raised bosses and carved details (eye sockets, feather/scale relief).",
+    "fillet_radius_mm": "Direct value for rounded_box(radius=) and any chamfer; 0.0 disables (low_poly).",
+    "detail_density": "Scales COUNT of repeated decorative features (feathers, scales, buttons) via linear_pattern/circular_pattern count = round(base_count * detail_density)."
+  },
+  "print_safety_clamps": {
+    "_doc": "After style is applied, clamp to print-readiness BEFORE export. Style never overrides physics.",
+    "min_feature_mm": 0.4,
+    "min_wall_mm": 0.8,
+    "min_protrusion_mm": "max(2.0, fillet_radius_mm) so thin exaggerated spikes (anime hair, ear tufts) don't fall below printable; thicken or fillet base.",
+    "max_overhang_deg": 50,
+    "note": "low_poly/geometric sharp bottom edges still need .on_bed(); add a 0.4mm base chamfer regardless of style edge_treatment."
+  }
+}

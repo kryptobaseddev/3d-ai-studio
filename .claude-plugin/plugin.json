@@ -1,0 +1,9 @@
+{
+  "name": "3d-studio",
+  "version": "0.3.0",
+  "displayName": "3D Studio",
+  "description": "Turn natural language and reference images into print-ready 3D files (STL/3MF/GLB) through an interactive design session. A local-first, manifold-by-construction CAD engine the agent authors — with an artistic style system, a packaged reference library of subject proportions, a JSON design-plan source-of-truth, a vision-grounded fidelity loop, printer profiles, git-tracked history, and a live React + three.js preview UI. Print-readiness is validated against the 2026 AI 3D Print-Readiness Benchmark.",
+  "author": { "name": "3D-AI-Studio" },
+  "license": "MIT",
+  "keywords": ["3d-printing", "cad", "stl", "3mf", "bambu", "makerworld", "three.js", "trimesh", "manifold", "text-to-3d", "image-to-3d", "design-session", "parametric"]
+}

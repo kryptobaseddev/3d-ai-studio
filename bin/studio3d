@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# studio3d — bundled CLI wrapper for the 3d-studio Claude Code plugin.
+#
+# Resolves the studio3d Python harness and runs it through a bootstrapped venv.
+# Search order for the interpreter:
+#   1. the plugin-data venv created by hooks/bootstrap.sh (survives plugin updates)
+#   2. a local .venv at the plugin root (dev mode)
+#   3. system python3 (assumes deps already importable)
+set -euo pipefail
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+DATA_VENV="${HOME}/.local/share/studio3d/venv/bin/python"
+
+if [ -x "${DATA_VENV}" ]; then
+  PY="${DATA_VENV}"
+elif [ -x "${PLUGIN_ROOT}/.venv/bin/python" ]; then
+  PY="${PLUGIN_ROOT}/.venv/bin/python"
+else
+  PY="python3"
+fi
+
+export PYTHONPATH="${PLUGIN_ROOT}/harness:${PYTHONPATH:-}"
+exec "${PY}" -m studio3d.cli "$@"

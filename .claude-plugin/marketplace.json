@@ -1,0 +1,12 @@
+{
+  "name": "studio3d-tools",
+  "description": "Tools for turning natural language and reference images into print-ready 3D models — an agentic CAD design studio for 3D printing.",
+  "owner": { "name": "3D-AI-Studio" },
+  "plugins": [
+    {
+      "name": "3d-studio",
+      "source": "./",
+      "description": "Natural language + images → print-ready 3D files, with print-readiness validation and a three.js preview UI."
+    }
+  ]
+}

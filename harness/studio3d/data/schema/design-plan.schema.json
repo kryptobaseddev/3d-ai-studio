@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studio3d.dev/schema/design-plan/v3.json",
+  "title": "studio3d Design Plan",
+  "description": "Regenerable source-of-truth for a design, produced by a Grill-me session from text + reference images. Edit a field and regenerate to update the model.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "subject",
+    "style",
+    "category",
+    "dimensions_mm"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "kebab slug / project name"
+    },
+    "subject": {
+      "type": "string",
+      "description": "what is being made, e.g. 'owl'"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "style": {
+      "type": "string",
+      "enum": [
+        "clean",
+        "realistic",
+        "cartoonish",
+        "chibi",
+        "anime",
+        "low-poly",
+        "geometric",
+        "stylized"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "mechanical",
+        "functional",
+        "organic",
+        "decorative",
+        "hybrid"
+      ]
+    },
+    "dimensions_mm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    },
+    "wall_thickness_mm": {
+      "type": "number",
+      "minimum": 0
+    },
+    "colors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hex"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^#?[0-9a-fA-F]{6}$"
+          },
+          "part": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "characteristics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "defining visual traits the model MUST have"
+    },
+    "unique_details": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reference_images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "printer_profile": {
+      "type": "string"
+    },
+    "material": {
+      "type": "string"
+    },
+    "multicolor": {
+      "type": "boolean"
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "approach"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "approach": {
+            "type": "string"
+          },
+          "size_mm": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "position_mm": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "purpose": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "notes": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

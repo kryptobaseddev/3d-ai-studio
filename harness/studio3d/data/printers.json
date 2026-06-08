@@ -1,0 +1,2038 @@
+{
+  "schema_version": 1,
+  "updated": "2026-06-08",
+  "note": "Top consumer 3D printers with build volumes, nozzles, AMS/multicolor capacity, and slicer quality presets. Maintained in-repo; update via the printer-db-research workflow.",
+  "count": 29,
+  "printers": [
+    {
+      "make": "Anycubic",
+      "model": "Kobra 2",
+      "slug": "anycubic-kobra-2",
+      "process": "fdm",
+      "build_volume_mm": [
+        220,
+        220,
+        250
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4
+      ],
+      "max_nozzle_temp_c": 260,
+      "max_bed_temp_c": 110,
+      "bed_type": "PEI-coated spring steel / textured magnetic flexible plate",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "ABS"
+      ],
+      "presets": [
+        {
+          "name": "0.12mm Detail @Anycubic Kobra 2 Neo 0.4 nozzle",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Standard @Anycubic Kobra 2 Neo 0.4 nozzle",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Anycubic Kobra 2 Neo 0.4 nozzle",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Bowden-fed Cartesian (i3-style) high-speed FDM printer. Recommended print speed ~150 mm/s, max ~250 mm/s. LeviQ 2.0 auto-leveling, 4.3-inch touchscreen, filament runout + power-loss resume. The base Kobra 2 has NO multi-material/AMS support and is single-color only. Slicer profiles in OrcaSlicer are shared with the Kobra 2 Neo (same 220x220x250mm class / 0.4mm hotend). The Kobra 2 Pro/Plus/Max are larger/faster siblings, not covered here. 1.75mm filament.",
+      "sources": [
+        "https://store.anycubic.com/products/kobra-2",
+        "https://store.anycubic.com/blogs/3d-printing-guides/anycubic-kobra-2-series-specs-and-features-comparison",
+        "https://github.com/SoftFever/OrcaSlicer/tree/main/resources/profiles/Anycubic/process"
+      ]
+    },
+    {
+      "make": "Anycubic",
+      "model": "Kobra 3 (Combo)",
+      "slug": "anycubic-kobra-3",
+      "process": "fdm",
+      "build_volume_mm": [
+        250,
+        250,
+        260
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 110,
+      "bed_type": "Textured PEI magnetic flexible spring-steel plate",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm HighDetail @Anycubic Kobra 3 0.4 nozzle",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Detail @Anycubic Kobra 3 0.4 nozzle",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Anycubic Kobra 3 0.4 nozzle",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Anycubic Kobra 3 0.4 nozzle",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "ACE Pro",
+        "max_colors": 8
+      },
+      "notes": "Bowden-fed Cartesian high-speed FDM (max 600 mm/s, ~300 mm/s typical). Direct-drive-style dual-gear extruder, LeviQ 3.0 auto-leveling, vibration compensation. Build volume listed as 250x250x260mm (V1; V2 ~255x255x260mm). Multi-color via Anycubic ACE Pro 'color box' which holds 4 spools = 4 colors; chaining TWO ACE Pro units gives up to 8 colors. ACE Pro also dries filament (dual PTC, up to ~55C internal). NFC/RFID intelligent filament ID on Anycubic spools auto-sets slicer params. TPU is single-color only (not ACE Pro compatible). Color changes use a purge/prime tower (notable waste). Slicer: Anycubic Slicer Next (OrcaSlicer fork) or OrcaSlicer/Cura. 1.75mm filament.",
+      "sources": [
+        "https://store.anycubic.com/products/kobra-3-combo",
+        "https://store.anycubic.com/products/anycubic-kobra-3",
+        "https://github.com/SoftFever/OrcaSlicer/tree/main/resources/profiles/Anycubic/process"
+      ]
+    },
+    {
+      "make": "Anycubic",
+      "model": "Kobra S1 (Combo)",
+      "slug": "anycubic-kobra-s1",
+      "process": "fdm",
+      "build_volume_mm": [
+        250,
+        250,
+        250
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 320,
+      "max_bed_temp_c": 120,
+      "bed_type": "Dual-sided PEI magnetic flexible spring-steel plate (enclosed chamber, PC door/top)",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "ABS",
+        "ASA"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Standard @Anycubic Kobra S1 0.4 nozzle",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Standard @Anycubic Kobra S1 0.4 nozzle",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm High Quality @Anycubic Kobra S1 0.4 nozzle",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Anycubic Kobra S1 0.4 nozzle",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "ACE Pro",
+        "max_colors": 8
+      },
+      "notes": "Anycubic's first CoreXY printer; fully enclosed. Max 600 mm/s, recommended ~300 mm/s, accel up to 20,000 mm/s^2. Quick-release proprietary nozzle/hotend (custom, not standard volcano/MK8). Layer-height hardware range 0.05-0.28mm (0.08mm min in stock OrcaSlicer profiles for 0.4 nozzle). Multi-color via Anycubic ACE Pro color box: 4 spools = 4 colors; two ACE Pro units chained = up to 8 colors. ACE Pro also dries filament. TPU single-color only (not ACE Pro compatible). Built-in camera, AI spaghetti/first-layer detection, activated-carbon filtration. Heavy purge waste in multicolor. Slicer: Anycubic Slicer Next (OrcaSlicer fork). Note: OrcaSlicer upstream also ships a 'Kobra S1 Max' (larger) with its own 0.25/0.4 nozzle presets - distinct machine. 1.75mm filament.",
+      "sources": [
+        "https://store.anycubic.com/products/kobra-s1-combo",
+        "https://store.anycubic.com/products/kobra-s1",
+        "https://www.voxelmatters.com/anycubic-kobra-s1-review-no-fuss-corexy-for-speed-and-reliability/",
+        "https://wiki.anycubic.com/en/software-and-app/new-page-anycubic-slicer-beta(orca-version)/layer-height"
+      ]
+    },
+    {
+      "make": "Anycubic",
+      "model": "Photon Mono M5s (12K)",
+      "slug": "anycubic-photon-mono-m5s",
+      "process": "resin",
+      "build_volume_mm": [
+        218,
+        123,
+        200
+      ],
+      "nozzle_mm": 0,
+      "max_nozzle_temp_c": 0,
+      "presets": [
+        {
+          "name": "Default 0.05mm layer (Anycubic Photon Workshop / ChituBox)",
+          "layer_height_mm": 0.05,
+          "category": "standard"
+        },
+        {
+          "name": "Standard 0.10mm layer (Anycubic rated test setting)",
+          "layer_height_mm": 0.1,
+          "category": "standard"
+        },
+        {
+          "name": "Fine 0.03mm layer",
+          "layer_height_mm": 0.03,
+          "category": "fine"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "MSLA (LCD) resin printer. 10.1-inch 12K mono LCD, 11520 x 5120 px. XY resolution ~19 x 24 micron pixel (19um X / 24um Y). First leveling-free 12K consumer resin printer (sensor + hidden-spring auto leveling). LED-matrix UV light source, double linear-rail Z axis (10um precision), laser-engraved aluminum build plate, 4.3-inch touchscreen, USB + WiFi (Anycubic app). Speed up to ~105 mm/h with high-speed resin (70 mm/h general). Anycubic rates the printer at a 0.1mm test layer height; common production default is 0.05mm. RESIN PROCESS: single-material, NO AMS / no multi-color; supports required; IPA wash + UV cure post-processing. Layer height 0.01-0.15mm set in slicer (Anycubic Photon Workshop or ChituBox). Preset names above are representative defaults. NOTE: distinct from plain Mono M5 (no auto-level) and the newer M5s Pro (14K).",
+      "sources": [
+        "https://store.anycubic.com/products/photon-mono-m5s",
+        "https://www.tomshardware.com/reviews/anycubic-photon-mono-m5s",
+        "https://www.liqcreate.com/supportarticles/photon-mono-m5s-12k/"
+      ]
+    },
+    {
+      "make": "Bambu Lab",
+      "model": "A1",
+      "slug": "bambu-a1",
+      "process": "fdm",
+      "build_volume_mm": [
+        256,
+        256,
+        256
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 100,
+      "bed_type": "Textured PEI plate (also supports Smooth/Cool Plate, High-Temp, Dual-Texture PEI); heated to 100C",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "PVA",
+        "PLA-CF (with hardened nozzle)"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Extra Fine @BBL A1",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.08mm High Quality @BBL A1",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Fine @BBL A1",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm High Quality @BBL A1",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm High Quality @BBL A1",
+          "layer_height_mm": 0.16,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @BBL A1",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @BBL A1",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Strength @BBL A1",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.24mm Draft @BBL A1",
+          "layer_height_mm": 0.24,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm Extra Draft @BBL A1",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "AMS lite",
+        "max_colors": 4
+      },
+      "notes": "256x256x256 mm open-frame bed-slinger (CoreXY-style cantilever; Steel + extruded aluminum chassis). Default 0.4mm stainless steel nozzle, optional 0.2/0.6/0.8mm. Native multicolor via a single AMS lite = 4 colors (AMS lite cannot be chained). With the AMS HUB (SA013) accessory the A1 can instead drive up to 4 enclosed AMS / AMS 2 Pro / AMS HT units (up to 16 colors). The 0.4-nozzle quality process presets carry the verbatim '@BBL A1' suffix shown here (pulled from the Bambu Studio profile repo). Additional 0.2-nozzle (e.g. '0.06mm Fine @BBL A1 0.2 nozzle', '0.08mm Extra Fine'), 0.6-nozzle and 0.8-nozzle preset sets also exist. Max toolhead speed 500 mm/s, 10,000 mm/s^2. Open frame: not ideal for ABS/ASA/PC/PA. 1.75mm filament.",
+      "sources": [
+        "https://bambulab.com/en/a1/tech-specs",
+        "https://github.com/bambulab/BambuStudio/tree/master/resources/profiles/BBL/process",
+        "https://wiki.bambulab.com/en/a1/manual/faq",
+        "https://wiki.bambulab.com/en/ams/manual/multi-model-AMS-compatibility-guide"
+      ]
+    },
+    {
+      "make": "Bambu Lab",
+      "model": "A1 mini",
+      "slug": "bambu-a1-mini",
+      "process": "fdm",
+      "build_volume_mm": [
+        180,
+        180,
+        180
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 80,
+      "bed_type": "Textured PEI plate (also Cool Plate / others); heated to 80C max (low-power fanless PSU limit)",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "PVA"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Extra Fine @BBL A1M",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.08mm High Quality @BBL A1M",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Fine @BBL A1M",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm High Quality @BBL A1M",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm High Quality @BBL A1M",
+          "layer_height_mm": 0.16,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @BBL A1M",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @BBL A1M",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Strength @BBL A1M",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.24mm Draft @BBL A1M",
+          "layer_height_mm": 0.24,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm Extra Draft @BBL A1M",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "AMS lite",
+        "max_colors": 4
+      },
+      "notes": "180x180x180 mm open-frame cantilever bed-slinger. Smaller sibling of the A1. Default 0.4mm stainless steel nozzle, optional 0.2/0.6/0.8mm. Max bed temp is only 80C (vs 100C on the A1) due to a low-power fanless power supply, so it is limited to low-temp materials (PLA/PETG/TPU) and is not recommended for ABS/ASA/PC/PA. Multicolor via a single AMS lite = 4 colors max; AMS lite cannot be chained. An AMS HUB (SA013) lets it use enclosed AMS / AMS 2 Pro / AMS HT (up to 4 units) for more colors. Quality process presets use the internal '@BBL A1M' suffix (Bambu Studio repo). Max toolhead speed 500 mm/s, 10,000 mm/s^2. Silent mode ~48 dB. 1.75mm filament.",
+      "sources": [
+        "https://bambulab.com/en/a1-mini/tech-specs",
+        "https://github.com/bambulab/BambuStudio/tree/master/resources/profiles/BBL/process",
+        "https://wiki.bambulab.com/en/a1-mini/manual/faq"
+      ]
+    },
+    {
+      "make": "Bambu Lab",
+      "model": "H2D",
+      "slug": "bambu-h2d",
+      "process": "fdm",
+      "build_volume_mm": [
+        325,
+        320,
+        325
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 350,
+      "max_bed_temp_c": 120,
+      "bed_type": "Textured PEI plate and Smooth PEI plate; heated up to 120C; actively heated chamber up to 65C",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "PA",
+        "PET",
+        "PC",
+        "ABS",
+        "ASA",
+        "PPA-CF/GF",
+        "PPS",
+        "PPS-CF/GF",
+        "carbon/glass-fiber reinforced"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Extra Fine @BBL H2D",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Fine @BBL H2D",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Balanced Quality @BBL H2D",
+          "layer_height_mm": 0.16,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Standard @BBL H2D",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @BBL H2D",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Balanced Strength @BBL H2D",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.24mm Standard @BBL H2D",
+          "layer_height_mm": 0.24,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "AMS 2 Pro",
+        "max_colors": 16
+      },
+      "notes": "Flagship DUAL-NOZZLE CoreXY, Bambu's largest build volume. Build volume is configuration-dependent: 325x320x325 mm single-nozzle 3D printing; 300x320x325 mm dual-nozzle; total cross-nozzle volume 350x320x325 mm. Two independent hotends (each default 0.4mm hardened steel; optional 0.2/0.6/0.8mm), max nozzle 350C; standard-flow hotend ~40 mm^3/s, optional high-flow ~65 mm^3/s. Max bed 120C, actively heated chamber up to 65C for CF/GF composites. Multicolor via the new AMS 2 Pro (integrated drying): 4 colors per unit, up to 4 units = 16 colors. Optional 10W / 40W laser + cutting modules. 1000 mm/s toolhead, 20,000 mm/s^2; vision-assisted encoder ~50um motion accuracy; 15 filament-flow sensors. NOTE: the H2D's '@BBL H2D' presets use a different naming scheme than the X/P/A series - 'Standard / Balanced Quality / Balanced Strength / Fine / Extra Fine' rather than 'Optimal/Strength/Draft'. The internal preset suffix is '@BBL H2D' (the H2D Pro uses a parallel '@BBL H2DP' set). 1.75mm filament. A separate H2D Pro variant exists with the same build volumes.",
+      "sources": [
+        "https://bambulab.com/en/h2d/tech-specs",
+        "https://us.store.bambulab.com/products/h2d",
+        "https://github.com/bambulab/BambuStudio/tree/master/resources/profiles/BBL/process",
+        "https://3dprintingindustry.com/news/bambu-labs-new-h2d-3d-printer-technical-specifications-and-pricing-237763/"
+      ]
+    },
+    {
+      "make": "Bambu Lab",
+      "model": "P1P",
+      "slug": "bambu-p1p",
+      "process": "fdm",
+      "build_volume_mm": [
+        256,
+        256,
+        256
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 100,
+      "bed_type": "Textured PEI plate (also Cool Plate / Engineering plate); heated to 100C",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "ABS",
+        "ASA"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Extra Fine @BBL P1P",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.08mm High Quality @BBL P1P",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Fine @BBL P1P",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm High Quality @BBL P1P",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm High Quality @BBL P1P",
+          "layer_height_mm": 0.16,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @BBL P1P",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @BBL P1P",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Strength @BBL P1P",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.24mm Draft @BBL P1P",
+          "layer_height_mm": 0.24,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm Extra Draft @BBL P1P",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "AMS",
+        "max_colors": 16
+      },
+      "notes": "256x256x256 mm enclosed-capable CoreXY (P1P ships open-frame / panel-less but is the same core as P1S). Default 0.4mm stainless nozzle, optional 0.2/0.6/0.8mm. Max nozzle 300C, max bed 100C. Multicolor via the standard enclosed AMS: 1 unit = 4 colors, up to 4 AMS chained = 16 colors. AMS lite is NOT compatible with P-series. The P1P has its own '@BBL P1P' process preset set (Bambu Studio repo), with the identical layer-height lineup to the X1C set. Max toolhead speed 500 mm/s, 20,000 mm/s^2. 1.75mm filament.",
+      "sources": [
+        "https://bambulab.com/en-us/p1",
+        "https://github.com/bambulab/BambuStudio/tree/master/resources/profiles/BBL/process",
+        "https://wiki.bambulab.com/en/p1/manual/faq"
+      ]
+    },
+    {
+      "make": "Bambu Lab",
+      "model": "P1S",
+      "slug": "bambu-p1s",
+      "process": "fdm",
+      "build_volume_mm": [
+        256,
+        256,
+        256
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 100,
+      "bed_type": "Textured PEI plate (also Cool / Engineering / High-Temp plates); heated to 100C",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "ABS",
+        "ASA",
+        "PC",
+        "PA (CF/GF with hardened nozzle)"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Extra Fine @BBL X1C",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.08mm High Quality @BBL X1C",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Fine @BBL X1C",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm High Quality @BBL X1C",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm High Quality @BBL X1C",
+          "layer_height_mm": 0.16,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @BBL X1C",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @BBL X1C",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Strength @BBL X1C",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.24mm Draft @BBL X1C",
+          "layer_height_mm": 0.24,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm Extra Draft @BBL X1C",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "AMS",
+        "max_colors": 16
+      },
+      "notes": "256x256x256 mm FULLY ENCLOSED CoreXY (enclosed + activated-carbon filter version of the P1P). Default 0.4mm stainless nozzle, optional 0.2/0.6/0.8mm. Max nozzle 300C, max bed 100C. IMPORTANT preset naming: the P1S has no '@BBL P1S' process set of its own; in Bambu Studio it inherits and displays the X1C presets verbatim (its machine config sets default_print_profile = '0.20mm Standard @BBL X1C', and the X1C process profiles list 'Bambu Lab P1S 0.4 nozzle' as a compatible_printer). So the exact preset names a P1S user sees are the '@BBL X1C' names listed here. Multicolor via standard enclosed AMS: 4 colors per unit, up to 4 = 16. AMS lite NOT compatible. Max toolhead 500 mm/s, 20,000 mm/s^2. 1.75mm.",
+      "sources": [
+        "https://us.store.bambulab.com/products/p1s",
+        "https://github.com/bambulab/BambuStudio/blob/master/resources/profiles/BBL/machine/Bambu%20Lab%20P1S%200.4%20nozzle.json",
+        "https://github.com/bambulab/BambuStudio/blob/master/resources/profiles/BBL/process/0.20mm%20Standard%20%40BBL%20X1C.json"
+      ]
+    },
+    {
+      "make": "Bambu Lab",
+      "model": "X1 Carbon (X1C)",
+      "slug": "bambu-x1-carbon",
+      "process": "fdm",
+      "build_volume_mm": [
+        256,
+        256,
+        256
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 120,
+      "bed_type": "Textured PEI plate (also Cool / Engineering / High-Temp plates); heated, up to 120C @110V (110C @220V)",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "ABS",
+        "ASA",
+        "PC",
+        "PA",
+        "PA-CF/GF",
+        "PET-CF"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Extra Fine @BBL X1C",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.08mm High Quality @BBL X1C",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Fine @BBL X1C",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm High Quality @BBL X1C",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm High Quality @BBL X1C",
+          "layer_height_mm": 0.16,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @BBL X1C",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @BBL X1C",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Strength @BBL X1C",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.24mm Draft @BBL X1C",
+          "layer_height_mm": 0.24,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm Extra Draft @BBL X1C",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "AMS",
+        "max_colors": 16
+      },
+      "notes": "256x256x256 mm enclosed flagship CoreXY with Micro Lidar (first-layer inspection / flow calibration) and hardened-steel nozzle/extruder for abrasive composites. Default 0.4mm hardened steel nozzle, optional 0.2/0.6/0.8mm. Max nozzle 300C. Max bed temp is voltage-dependent: 120C on 110V mains, 110C on 220V. These '@BBL X1C' quality process presets are the canonical set (verbatim from Bambu Studio repo) and are also shared/inherited by the X1, P1S and X1E. Multicolor via standard enclosed AMS: 4 colors per unit, up to 4 AMS = 16 colors. AMS lite NOT compatible. Max toolhead 500 mm/s, 20,000 mm/s^2. 1.75mm filament.",
+      "sources": [
+        "https://public-cdn.bambulab.com/store/bambulab-X1-carbon-tech-specs.pdf",
+        "https://github.com/bambulab/BambuStudio/tree/master/resources/profiles/BBL/process",
+        "https://forum.bambulab.com/t/max-bed-temp-120c-for-110v/13616"
+      ]
+    },
+    {
+      "make": "Bambu Lab",
+      "model": "X1E",
+      "slug": "bambu-x1e",
+      "process": "fdm",
+      "build_volume_mm": [
+        256,
+        256,
+        256
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 320,
+      "max_bed_temp_c": 120,
+      "bed_type": "Textured PEI / Engineering / High-Temp plates; heated up to ~120C; plus active heated chamber control 40-60C",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "ASA",
+        "PC",
+        "PA",
+        "PA-CF/GF",
+        "PPA-CF/GF",
+        "PPS",
+        "PPS-CF"
+      ],
+      "presets": [
+        {
+          "name": "0.08mm Extra Fine @BBL X1C",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.08mm High Quality @BBL X1C",
+          "layer_height_mm": 0.08,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm Fine @BBL X1C",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.12mm High Quality @BBL X1C",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm High Quality @BBL X1C",
+          "layer_height_mm": 0.16,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @BBL X1C",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @BBL X1C",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Strength @BBL X1C",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.24mm Draft @BBL X1C",
+          "layer_height_mm": 0.24,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm Extra Draft @BBL X1C",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "AMS",
+        "max_colors": 16
+      },
+      "notes": "256x256x256 mm enterprise/engineering variant of the X1C. Single-nozzle CoreXY (NOT dual-nozzle - dual is H2-series only). Higher 320C max nozzle (all-metal hotend + hardened steel) for high-temp engineering composites (PPA-CF/GF, PPS, PPS-CF), plus an actively heated chamber settable 40-60C. Default 0.4mm hardened nozzle, optional 0.2/0.6/0.8mm. Adds secure enterprise connectivity (Ethernet, WPA2-Enterprise, kill switch, full LAN-only/cloud-free operation) and triple-stage VOC/particulate filtration. PRESET NAMING: the X1E has its own machine configs but its default_print_profile = '0.20mm Standard @BBL X1C' and it is a compatible_printer of the X1C process profiles, so in Bambu Studio it shows the '@BBL X1C' preset names listed here. Multicolor via standard enclosed AMS: 4 per unit, up to 4 = 16. AMS lite NOT compatible. Max toolhead 500 mm/s, 20,000 mm/s^2.",
+      "sources": [
+        "https://bambulab.com/en-us/x1e",
+        "https://wiki.bambulab.com/en/x1/manual/X1E-chamber-temp-guide",
+        "https://github.com/bambulab/BambuStudio/blob/master/resources/profiles/BBL/machine/Bambu%20Lab%20X1E%200.4%20nozzle.json"
+      ]
+    },
+    {
+      "make": "Creality",
+      "model": "Ender-3 V3",
+      "slug": "creality-ender-3-v3",
+      "process": "fdm",
+      "build_volume_mm": [
+        220,
+        220,
+        250
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 110,
+      "bed_type": "PEI-coated flexible spring-steel build plate",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "TPU",
+        "PLA-CF",
+        "PETG-CF"
+      ],
+      "presets": [
+        {
+          "name": "0.12mm Fine @Creality Ender3V3 (0.4 nozzle)",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Creality Ender3V3 (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Creality Ender3V3 (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Creality Ender3V3 (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Top-tier Ender-3 V3 (released Feb 2024). Open-frame CoreXZ motion system (XZ co-driven by two base-mounted motors), 600 mm/s burst max / 20000 mm/s^2, automatic belt tensioning. All-metal 300C hotend and 110C bed enable engineering materials including carbon-fiber blends. Dual-gear Sprite direct extruder, auto-leveling, input shaping (G-sensor). Single-color. Sliced via Creality Print; OrcaSlicer tiers follow the standard fine/optimal/standard/draft ladder for the 0.4 nozzle.",
+      "sources": [
+        "https://www.creality.com/products/creality-ender-3-v3",
+        "https://forum.creality.com/t/ender-3-v3-vs-ender-3-v3-se-vs-ender-3-v3-ke/23425",
+        "https://www.3dtechvalley.com/ender-3-v3-review/"
+      ]
+    },
+    {
+      "make": "Creality",
+      "model": "Ender-3 V3 KE",
+      "slug": "creality-ender-3-v3-ke",
+      "process": "fdm",
+      "build_volume_mm": [
+        220,
+        220,
+        240
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 100,
+      "bed_type": "PEI-coated flexible spring-steel build plate",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "TPU",
+        "ASA"
+      ],
+      "presets": [
+        {
+          "name": "0.12mm Fine @Creality Ender3V3KE (0.4 nozzle)",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Creality Ender3V3KE (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Creality Ender3V3KE (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Creality Ender3V3KE (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Mid-range Klipper-firmware bed-slinger (Cartesian) released fall 2023. 500 mm/s max / 8000 mm/s^2. 60W ceramic-heater hotend with bi-metal (copper+titanium-alloy) heatbreak and copper nozzle reaching 300C; bed max 100C. Sprite direct-drive extruder, CR-Touch auto-leveling + strain-gauge auto Z-offset, Wi-Fi, 4.3in touchscreen. Single-color. Nozzle swaps to 0.6/0.8mm supported via Creality K1/KE-compatible nozzle kits.",
+      "sources": [
+        "https://store.creality.com/blogs/all/ender-3-v3-se-vs-ke",
+        "https://www.matterhackers.com/store/l/creality3d-ender-3-v3-ke-3d-printer",
+        "https://all3dp.com/2/ender-3-v3-se-vs-ke-differences/",
+        "https://3dpros.com/printers/ender-3-v3-ke"
+      ]
+    },
+    {
+      "make": "Creality",
+      "model": "Ender-3 V3 SE",
+      "slug": "creality-ender-3-v3-se",
+      "process": "fdm",
+      "build_volume_mm": [
+        220,
+        220,
+        250
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4
+      ],
+      "max_nozzle_temp_c": 260,
+      "max_bed_temp_c": 100,
+      "bed_type": "PC-coated spring-steel flexible build plate",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU"
+      ],
+      "presets": [
+        {
+          "name": "0.12mm Fine @Creality Ender3V3SE (0.4 nozzle)",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Creality Ender3V3SE (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Creality Ender3V3SE (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Creality Ender3V3SE (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Budget entry-level bed-slinger (Cartesian) released fall 2023. 250 mm/s max / 2500 mm/s^2. Standard hotend limited to 260C; PC-coated bed max 100C, so it targets low-temp materials (PLA/PETG/TPU). Sprite direct-drive extruder, CR-Touch + dual strain-gauge auto-leveling and auto Z-offset, 3.2in color screen with knob (no Wi-Fi). Single 0.4mm nozzle, single-color.",
+      "sources": [
+        "https://www.creality.com/products/ender-3-v3-se-3d-printer",
+        "https://store.creality.com/blogs/all/ender-3-v3-se-vs-ke",
+        "https://all3dp.com/2/ender-3-v3-se-vs-ke-differences/"
+      ]
+    },
+    {
+      "make": "Creality",
+      "model": "K1",
+      "slug": "creality-k1",
+      "process": "fdm",
+      "build_volume_mm": [
+        220,
+        220,
+        250
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 100,
+      "bed_type": "Flexible PEI-coated spring steel build plate (magnetic, removable)",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "TPU",
+        "ASA",
+        "PA"
+      ],
+      "presets": [
+        {
+          "name": "0.12mm Fine @Creality K1 (0.4 nozzle)",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Creality K1 (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Creality K1 (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Creality K1 (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Enclosed CoreXY high-speed printer (600 mm/s max, 20000 mm/s^2). 300C ceramic-heater hotend with titanium-alloy heatbreak and hardened-steel nozzle; 32 mm^3/s flow. Single-color only. Sliced via Creality Print (official); OrcaSlicer profiles use the '0.XXmm <tier> @Creality K1 (0.4 nozzle)' naming convention. The K1C variant adds a tri-metal nozzle for carbon-fiber/composite. Bed (PEI) max is 100C. OrcaSlicer process tiers follow the standard fine/optimal/standard/draft ladder at 0.12/0.16/0.20/0.28mm.",
+      "sources": [
+        "https://store.creality.com/products/k1-max-3d-printer",
+        "https://store.creality.com/blogs/all/k1-k1-max-printing-parameter-settings",
+        "https://wiki.creality.com/en/k1-flagship-series/k1-max/quick-start-guide/printing-parameter-settings",
+        "https://store.creality.com/blogs/all/creality-k1c"
+      ]
+    },
+    {
+      "make": "Creality",
+      "model": "K1 Max",
+      "slug": "creality-k1-max",
+      "process": "fdm",
+      "build_volume_mm": [
+        300,
+        300,
+        300
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 120,
+      "bed_type": "Flexible aluminum spring-steel build plate (smooth coated standard; textured PEI optional)",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "TPU",
+        "ASA",
+        "PA",
+        "PA-CF"
+      ],
+      "presets": [
+        {
+          "name": "0.12mm Fine @Creality K1Max (0.4 nozzle)",
+          "layer_height_mm": 0.12,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Creality K1Max (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Creality K1Max (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Creality K1Max (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Larger enclosed CoreXY sibling of the K1 with 300x300x300mm volume, AI LiDAR first-layer scanning and chamber AI camera, 600 mm/s max / 20000 mm/s^2. Hotend reaches 300C (ceramic heater, titanium-alloy heatbreak, hardened-steel nozzle). Heatbed reaches 60C in ~90s, max 120C. Single-color only (no AMS/CFS). Exact OrcaSlicer process preset confirmed as '0.20mm Standard @Creality K1Max (0.4 nozzle)' (preset id GP004), inheriting fdm_process_creality_common; other tiers follow the standard fine/optimal/standard/draft ladder.",
+      "sources": [
+        "https://store.creality.com/products/k1-max-3d-printer",
+        "https://filament2print.com/en/filament-fdm/2175-creality-k1-max-6971636403128.html",
+        "https://github.com/PeterVRC/OrcaSlicer-Profiles-Disappearing",
+        "https://store.creality.com/blogs/all/k1-k1-max-printing-parameter-settings"
+      ]
+    },
+    {
+      "make": "Creality",
+      "model": "K2 Plus",
+      "slug": "creality-k2-plus",
+      "process": "fdm",
+      "build_volume_mm": [
+        350,
+        350,
+        350
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4,
+        0.6,
+        0.8
+      ],
+      "max_nozzle_temp_c": 350,
+      "max_bed_temp_c": 120,
+      "bed_type": "Flexible spring-steel build plate; actively heated enclosed chamber up to 60C",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "ASA",
+        "PA-CF",
+        "PET-CF"
+      ],
+      "presets": [
+        {
+          "name": "0.10mm Fine @Creality K2Plus (0.4 nozzle)",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Creality K2Plus (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Creality K2Plus (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.30mm Draft @Creality K2Plus (0.4 nozzle)",
+          "layer_height_mm": 0.3,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": true,
+        "name": "CFS",
+        "max_colors": 16
+      },
+      "notes": "Flagship large-format enclosed CoreXY multicolor printer (350x350x350mm). High-flow Apus dual-gear direct-drive extruder, tri-metal hardened-steel 350C nozzle, 40 mm^3/s flow, 600 mm/s max / 30000 mm/s^2. Actively heated chamber to 60C, heatbed to 120C. Multicolor via CFS: each CFS unit holds 4 x 1kg spools; up to 4 CFS units chained = up to 16 colors. CFS supports PLA/PETG/ABS/ASA/PA-CF but NOT TPU or damp PVA/BVOH (TPU printed from external spool holder). Layer-height range 0.05-0.3mm. Two AI cameras (chamber spaghetti detection + toolhead flow). Released Nov 11, 2024.",
+      "sources": [
+        "https://www.creality.com/products/creality-k2-plus-cfs-combo",
+        "https://wiki.creality.com/en/k2-flagship-series/k2-plus/filament-parameters",
+        "https://forum.creality.com/t/creality-k2-plus-cfs-frequently-asked-questions-you-should-know/21698",
+        "https://www.matterhackers.com/store/l/creality3d-k2-plus-high-speed-multi-color-3d-printer/sk/M4CZ3FYD"
+      ]
+    },
+    {
+      "make": "Elegoo",
+      "model": "Centauri Carbon",
+      "slug": "elegoo-centauri-carbon",
+      "process": "fdm",
+      "build_volume_mm": [
+        256,
+        256,
+        256
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4
+      ],
+      "max_nozzle_temp_c": 320,
+      "max_bed_temp_c": 110,
+      "bed_type": "Magnetic dual-sided flexible plate: textured PEI one side, PLA cool-adhesion coating other side; 1000W AC heater",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "TPU",
+        "ABS",
+        "ASA",
+        "PLA-CF"
+      ],
+      "presets": [
+        {
+          "name": "0.10mm Fine @Elegoo CentauriCarbon (0.4 nozzle)",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Elegoo CentauriCarbon (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Elegoo CentauriCarbon (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Elegoo CentauriCarbon (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Budget enclosed CoreXY (launched ~$295). 256x256x256mm, 500 mm/s / 20000 mm/s^2, 32 mm^3/s flow. Direct-drive hardened-steel dual-gear extruder (5.2:1), all-metal hotend with hardened-steel 320C nozzle (supports PLA-CF and abrasives). Bed heated by 1000W AC heater to 110C; ventilated/filtered enclosure but NO active chamber heater. NO native multicolor: the teased four-color add-on (originally 'Q3 2025') was walked back; as of Jan 2026 Elegoo finished the hardware design but had not released firmware/product, and offered owners compensation coupons. For built-in multicolor buy the newer Centauri Carbon 2 Combo (CANVAS system, 4 colors, 350C nozzle). 8GB storage, dual-band Wi-Fi, OTA. Sliced via Elegoo's OrcaSlicer-based slicer.",
+      "sources": [
+        "https://us.elegoo.com/products/centauri-carbon",
+        "https://www.elegoo.com/blogs/news/update-notice-on-centauri-carbon",
+        "https://www.tomshardware.com/3d-printing/broken-promises-elegoo-walks-back-planned-ams-for-centauri-carbon-offers-coupons-for-centauri-carbon-2",
+        "https://3dpros.com/printers/elegoo-centauri-carbon",
+        "https://us.elegoo.com/products/centauri-carbon-2-combo"
+      ]
+    },
+    {
+      "make": "Elegoo",
+      "model": "Mars 5 Ultra (9K)",
+      "slug": "elegoo-mars-5-ultra-9k",
+      "process": "resin",
+      "build_volume_mm": [
+        153.36,
+        77.76,
+        165
+      ],
+      "nozzle_mm": 0,
+      "max_nozzle_temp_c": 0,
+      "presets": [
+        {
+          "name": "Default 0.05mm layer (ChituBox / Voxeldance Tango)",
+          "layer_height_mm": 0.05,
+          "category": "standard"
+        },
+        {
+          "name": "Fine 0.03mm layer",
+          "layer_height_mm": 0.03,
+          "category": "fine"
+        },
+        {
+          "name": "Draft 0.10mm layer",
+          "layer_height_mm": 0.1,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "MSLA (LCD) resin printer. 7-inch 9K mono LCD, 8520 x 4320 px. XY resolution ~18 x 18 micron pixel. COB light source (92% uniformity), Tilt Release tilting-vat mechanism for fast peel, up to ~150 mm/h. AI camera monitoring, one-click auto-leveling, smart resin detection, 4.0-inch touchscreen, WiFi/USB. RESIN PROCESS: single-material, NO AMS / no multi-color; supports required for most models; requires IPA wash + UV cure post-processing. Typical/default layer height 0.05mm (50 micron); 0.01-0.10mm range set in slicer. Ships with ChituBox. NOTE: this is the Mars 5 ULTRA (9K). The plain Mars 5 is a separate, lower-spec model: 4K LCD, ~35 micron XY, ~143.43 x 89.6 x 150mm build volume. Preset names above are representative slicer defaults.",
+      "sources": [
+        "https://us.elegoo.com/products/mars-5-ultra-9k-7inch-monochrome-lcd-resin-3d-printer",
+        "https://www.tomshardware.com/3d-printing/elegoo-mars-5-ultra-review",
+        "https://www.liqcreate.com/supportarticles/elegoo-mars5-ultra-resin-3dprinting/"
+      ]
+    },
+    {
+      "make": "Elegoo",
+      "model": "Neptune 4",
+      "slug": "elegoo-neptune-4",
+      "process": "fdm",
+      "build_volume_mm": [
+        225,
+        225,
+        265
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 110,
+      "bed_type": "Flexible textured PEI-coated spring-steel build plate",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "TPU",
+        "PA"
+      ],
+      "presets": [
+        {
+          "name": "0.10mm Fine @Elegoo Neptune4 (0.4 nozzle)",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Elegoo Neptune4 (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Elegoo Neptune4 (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Elegoo Neptune4 (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Open-frame Cartesian bed-slinger with pre-installed Klipper firmware, ARM 64-bit quad-core. 500 mm/s max, input shaping + pressure advance. 300C extended brass hotend (0.4mm; ships with 2 spare brass nozzles). 121-point auto bed leveling, dual-gear direct extruder (5.2:1). Single-color. Sliced via Elegoo Cura (ELEGOO slicer) or community OrcaSlicer profiles; tiers follow standard fine/standard/draft ladder. Bed max 110C.",
+      "sources": [
+        "https://us.elegoo.com/products/elegoo-neptune-4-fdm-3d-printer",
+        "https://www.matterhackers.com/store/l/elegoo-neptune-4-3d-printer/sk/MS7357SL",
+        "https://3dwithus.com/elegoo-neptune-4-pro-review-3d-printer-testing-settings-tips"
+      ]
+    },
+    {
+      "make": "Elegoo",
+      "model": "Neptune 4 Pro",
+      "slug": "elegoo-neptune-4-pro",
+      "process": "fdm",
+      "build_volume_mm": [
+        225,
+        225,
+        265
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.4
+      ],
+      "max_nozzle_temp_c": 300,
+      "max_bed_temp_c": 110,
+      "bed_type": "Dual-sided flexible spring-steel plate (PLA-specific coating one side, textured PEI other side); segmented zone-heating bed",
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ABS",
+        "ASA",
+        "TPU",
+        "PA"
+      ],
+      "presets": [
+        {
+          "name": "0.10mm Fine @Elegoo Neptune4Pro (0.4 nozzle)",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.16mm Optimal @Elegoo Neptune4Pro (0.4 nozzle)",
+          "layer_height_mm": 0.16,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm Standard @Elegoo Neptune4Pro (0.4 nozzle)",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm Draft @Elegoo Neptune4Pro (0.4 nozzle)",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Pro version of the Neptune 4 with the same 225x225x265mm volume but upgraded cooling (2 side fans + 4 rear auxiliary fans) and a smart segmented zone-heating heatbed (110C max) for faster heat-up / lower power. 500 mm/s max / 20000 mm/s^2 (highest acceleration in the N4 line), Klipper, 121-point auto-leveling, dual-gear direct extruder (5.2:1), 300C hotend, 0.4mm brass nozzle. Dual-sided plate: PLA coating + textured PEI. Single-color.",
+      "sources": [
+        "https://us.elegoo.com/products/elegoo-neptune-4-pro-fdm-3d-printer",
+        "https://3dwithus.com/elegoo-neptune-4-pro-review-3d-printer-testing-settings-tips",
+        "https://www.thephonograph.net/elegoo-neptune-4-pro-review/"
+      ]
+    },
+    {
+      "make": "Elegoo",
+      "model": "Saturn 4 Ultra (12K)",
+      "slug": "elegoo-saturn-4-ultra-12k",
+      "process": "resin",
+      "build_volume_mm": [
+        218.88,
+        122.88,
+        220
+      ],
+      "nozzle_mm": 0,
+      "max_nozzle_temp_c": 0,
+      "presets": [
+        {
+          "name": "Default 0.05mm layer (ChituBox / Elegoo Voxeldance Tango)",
+          "layer_height_mm": 0.05,
+          "category": "standard"
+        },
+        {
+          "name": "Fine 0.03mm layer",
+          "layer_height_mm": 0.03,
+          "category": "fine"
+        },
+        {
+          "name": "Draft 0.10mm layer",
+          "layer_height_mm": 0.1,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "MSLA (LCD) resin printer. 10-inch 12K mono LCD, 11520 x 5120 px. XY resolution ~19 x 24 micron (19um X / 24um Y pixel). 405nm COB light source with Fresnel collimating lens (92% uniformity). Tilting-vat (Tilt Release) mechanism cuts peel force for faster prints, up to ~150 mm/h. Crystal-clear PFA release film, laser-etched build plate (no flexible plate). RESIN PROCESS: single-material only, NO AMS / no multi-color. Models almost always require support structures (generated in slicer) plus post-wash (IPA) and UV cure. Typical/default layer height 0.05mm (50 micron); range 0.01-0.10mm set entirely in slicer, not hardware. Ships with ChituBox Basic; Elegoo's own slicer is Voxeldance Tango / Satellite. Layer-height preset names above are representative slicer defaults, not fixed hardware profiles.",
+      "sources": [
+        "https://us.elegoo.com/products/saturn-4-ultra-12k-10inch-monochrome-lcd-resin-3d-printer",
+        "https://www.tomshardware.com/3d-printing/elegoo-saturn-4-ultra-review"
+      ]
+    },
+    {
+      "make": "Formlabs",
+      "model": "Form 4",
+      "slug": "formlabs-form-4",
+      "process": "resin",
+      "build_volume_mm": [
+        200,
+        125,
+        210
+      ],
+      "nozzle_mm": 0,
+      "max_nozzle_temp_c": 0,
+      "presets": [
+        {
+          "name": "PreForm 0.100mm (100 micron) layer - default",
+          "layer_height_mm": 0.1,
+          "category": "standard"
+        },
+        {
+          "name": "PreForm 0.050mm (50 micron) layer - fine",
+          "layer_height_mm": 0.05,
+          "category": "fine"
+        },
+        {
+          "name": "PreForm 0.025mm (25 micron) layer - finest",
+          "layer_height_mm": 0.025,
+          "category": "fine"
+        },
+        {
+          "name": "PreForm 0.200mm (200 micron) layer - draft",
+          "layer_height_mm": 0.2,
+          "category": "draft"
+        }
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "notes": "Professional MSLA printer using Formlabs' proprietary Low Force Display (LFD) print engine (LCD masking + collimated SLA-class light). Build volume 200 x 125 x 210mm (5.25 L). XY resolution 50 micron pixel with advanced pixel/sub-pixel smoothing. Layer thickness range 25-300 micron (0.025-0.300mm), set per-material in PreForm slicer; 100 micron (0.10mm) is the common default. Average speed ~40 mm/h at 100um, max ~100 mm/h. 60-LED backlight unit + collimating lenses; flexible-film resin tank, ~75,000+ layers tank life. RESIN PROCESS: single-material, NO AMS / no multi-color; supports auto-generated in PreForm; requires Form Wash (IPA/solvent) + Form Cure post-processing. Material-specific validated profiles (Grey V5, Clear V5, Black V5, White V5, Fast Model V1, plus engineering/dental/biocompatible resins) ship in PreForm - layer-height options above are the standard PreForm settings, gated by the selected resin. Form 4B variant adds biocompatible/medical resins. 1L = ~litres of build space.",
+      "sources": [
+        "https://formlabs.com/3d-printers/form-4/",
+        "https://formlabs.com/3d-printers/resin/tech-specs/",
+        "https://develop3d.com/3d-printing/review-formlabs-form-4/"
+      ]
+    },
+    {
+      "make": "Prusa",
+      "model": "CORE One",
+      "slug": "prusa-core-one",
+      "process": "fdm",
+      "build_volume_mm": [
+        250,
+        220,
+        270
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.25,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8
+      ],
+      "bed_type": "Magnetic heatbed with removable PEI spring steel sheets (smooth/textured/satin); ships with textured PEI",
+      "max_nozzle_temp_c": 290,
+      "max_bed_temp_c": 120,
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ASA",
+        "ABS",
+        "PC",
+        "PA/Nylon",
+        "PC-CF",
+        "PA-CF",
+        "TPU"
+      ],
+      "ams": {
+        "supported": true,
+        "name": "MMU3",
+        "max_colors": 5
+      },
+      "presets": [
+        {
+          "name": "0.10mm FAST DETAIL @COREONE 0.4",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.15mm SPEED @COREONE 0.4",
+          "layer_height_mm": 0.15,
+          "category": "standard"
+        },
+        {
+          "name": "0.15mm BALANCED @COREONE 0.4",
+          "layer_height_mm": 0.15,
+          "category": "standard"
+        },
+        {
+          "name": "0.15mm STRUCTURAL @COREONE 0.4",
+          "layer_height_mm": 0.15,
+          "category": "strength"
+        },
+        {
+          "name": "0.20mm SPEED @COREONE 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm BALANCED @COREONE 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm STRUCTURAL @COREONE 0.4",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.25mm SPEED @COREONE HF0.4",
+          "layer_height_mm": 0.25,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm DRAFT @COREONE HF0.4",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "notes": "Fully-enclosed CoreXY with active chamber temperature control (chamber up to ~55C). Now sold as CORE One+ (PrusaSlicer model name 'Prusa CORE One && CORE One+'). Build volume 250x220x270 mm (30% more volume than an MK4S, in ~50% less desk footprint). Ships standard with a high-flow Nextruder 0.4mm nozzle (HF0.4); toolless nozzle swap 0.25-0.8mm. 290C nozzle / 120C bed stock; an optional 400C hotend upgrade enables PEKK-CF, PPS-CF, PSU, PPA. Newer profile naming adds BALANCED presets and HF-only 0.25mm SPEED / 0.28mm DRAFT. Larger sibling 'CORE One L' has a 300x300x330 mm build volume and 60C chamber. MMU3 5-color supported.",
+      "sources": [
+        "https://www.prusa3d.com/en/core-one/",
+        "https://www.prusa3d.com/product/prusa-core-one-kit/",
+        "https://blog.prusa3d.com/introducing-prusa-core-one-fully-enclosed-corexy-3d-printer-with-active-temperature-control_105477/",
+        "https://github.com/prusa3d/PrusaSlicer/blob/master/resources/profiles/PrusaResearch.ini"
+      ]
+    },
+    {
+      "make": "Prusa",
+      "model": "MINI+",
+      "slug": "prusa-mini-plus",
+      "process": "fdm",
+      "build_volume_mm": [
+        180,
+        180,
+        180
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.25,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "bed_type": "Removable magnetic spring steel sheets (smooth/textured/satin), heatbed with cold-corner compensation",
+      "max_nozzle_temp_c": 280,
+      "max_bed_temp_c": 100,
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ASA",
+        "ABS",
+        "TPU",
+        "PVB",
+        "Nylon/PA (limited)"
+      ],
+      "ams": {
+        "supported": false,
+        "name": "none",
+        "max_colors": 1
+      },
+      "presets": [
+        {
+          "name": "0.10mm FAST DETAIL @MINIIS 0.4",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.15mm SPEED @MINIIS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "standard"
+        },
+        {
+          "name": "0.15mm STRUCTURAL @MINIIS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "strength"
+        },
+        {
+          "name": "0.20mm SPEED @MINIIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm STRUCTURAL @MINIIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.05mm DETAIL @MINIIS 0.25",
+          "layer_height_mm": 0.05,
+          "category": "fine"
+        }
+      ],
+      "notes": "Smallest Prusa FDM printer; cantilever Cartesian design with single Bowden-style extruder. Lower max temps than the MK-line: 280C nozzle / 100C bed (PLA/PETG/ASA/ABS/TPU range). With Input Shaper firmware it slices with the @MINIIS profiles (SPEED/STRUCTURAL/FAST DETAIL naming). MMU3 multi-material is NOT supported on the MINI+ (single color/material only). No standard enclosure.",
+      "sources": [
+        "https://www.prusa3d.com/product/original-prusa-mini/",
+        "https://github.com/prusa3d/PrusaSlicer/blob/master/resources/profiles/PrusaResearch.ini"
+      ]
+    },
+    {
+      "make": "Prusa",
+      "model": "MK4",
+      "slug": "prusa-mk4",
+      "process": "fdm",
+      "build_volume_mm": [
+        250,
+        210,
+        220
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.25,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8
+      ],
+      "bed_type": "Magnetic heatbed with removable PEI spring steel sheets (smooth/textured/satin); ships with satin PEI (original MK4)",
+      "max_nozzle_temp_c": 290,
+      "max_bed_temp_c": 120,
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ASA",
+        "ABS",
+        "PC",
+        "TPU",
+        "PVB",
+        "Nylon/PA"
+      ],
+      "ams": {
+        "supported": true,
+        "name": "MMU3",
+        "max_colors": 5
+      },
+      "presets": [
+        {
+          "name": "0.05mm ULTRADETAIL @MK4 0.4",
+          "layer_height_mm": 0.05,
+          "category": "fine"
+        },
+        {
+          "name": "0.07mm ULTRADETAIL @MK4 0.4",
+          "layer_height_mm": 0.07,
+          "category": "fine"
+        },
+        {
+          "name": "0.10mm DETAIL @MK4 0.4",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.15mm QUALITY @MK4 0.4",
+          "layer_height_mm": 0.15,
+          "category": "fine"
+        },
+        {
+          "name": "0.15mm SPEED @MK4 0.4",
+          "layer_height_mm": 0.15,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm QUALITY @MK4 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm SPEED @MK4 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.30mm DRAFT @MK4 0.4",
+          "layer_height_mm": 0.3,
+          "category": "draft"
+        }
+      ],
+      "notes": "Original MK4 (pre-Input-Shaper firmware / pre-MK4S). PrusaSlicer profiles use the legacy @MK4 token with the older QUALITY/DETAIL/ULTRADETAIL/DRAFT naming (distinct from the @MK4IS SPEED/STRUCTURAL scheme used by the MK4S). Upgradeable to MK4S via the Nextruder HF upgrade kit; once on MK4S firmware it slices with the @MK4IS profiles. Same 250x210x220 build volume, 290C nozzle, 120C bed, and MMU3 5-color support as the MK4S. Cartesian i3 bed-slinger, open frame.",
+      "sources": [
+        "https://www.prusa3d.com/product/original-prusa-mk4-2/",
+        "https://github.com/prusa3d/PrusaSlicer/blob/master/resources/profiles/PrusaResearch.ini"
+      ]
+    },
+    {
+      "make": "Prusa",
+      "model": "MK4S",
+      "slug": "prusa-mk4s",
+      "process": "fdm",
+      "build_volume_mm": [
+        250,
+        210,
+        220
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.25,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8
+      ],
+      "bed_type": "Magnetic heatbed with removable PEI spring steel sheets (smooth/textured/satin); ships with smooth PEI",
+      "max_nozzle_temp_c": 290,
+      "max_bed_temp_c": 120,
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ASA",
+        "ABS",
+        "PC",
+        "TPU",
+        "PVB",
+        "Nylon/PA"
+      ],
+      "ams": {
+        "supported": true,
+        "name": "MMU3",
+        "max_colors": 5
+      },
+      "presets": [
+        {
+          "name": "0.10mm FAST DETAIL @MK4IS 0.4",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.15mm SPEED @MK4IS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "standard"
+        },
+        {
+          "name": "0.15mm STRUCTURAL @MK4IS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "strength"
+        },
+        {
+          "name": "0.20mm SPEED @MK4IS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm STRUCTURAL @MK4IS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.05mm ULTRADETAIL @MK4IS 0.25",
+          "layer_height_mm": 0.05,
+          "category": "fine"
+        },
+        {
+          "name": "0.25mm SPEED @MK4IS HF0.4",
+          "layer_height_mm": 0.25,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm DRAFT @MK4IS HF0.4",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "notes": "Input Shaper firmware printer; PrusaSlicer profiles use the @MK4IS token (the MK4S is the firmware/HW-revised MK4 and shares the same profile model). Ships standard with a high-flow Prusa CHT brass 0.4mm nozzle; standard (non-HF) 0.4mm nozzle is recommended for MMU3 multi-material (best speed/lowest waste). 290C nozzle / 120C bed. The 0.25mm SPEED and 0.28mm DRAFT presets require the high-flow (HF0.4) nozzle. Toolless nozzle swap. Cartesian i3 (bed-slinger), open frame; an optional enclosure is sold separately.",
+      "sources": [
+        "https://www.prusa3d.com/product/original-prusa-mk4s/",
+        "https://www.prusa3d.com/product/original-prusa-mk4-2/",
+        "https://github.com/prusa3d/PrusaSlicer/blob/master/resources/profiles/PrusaResearch.ini"
+      ]
+    },
+    {
+      "make": "Prusa",
+      "model": "XL (5-tool)",
+      "slug": "prusa-xl-5tool",
+      "process": "fdm",
+      "build_volume_mm": [
+        360,
+        360,
+        360
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.25,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8
+      ],
+      "bed_type": "Segmented heatbed with 16 individually controlled tiles; removable magnetic spring steel sheets (smooth/textured/satin); ships with satin PEI",
+      "max_nozzle_temp_c": 290,
+      "max_bed_temp_c": 120,
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ASA",
+        "ABS",
+        "PC",
+        "PA/Nylon",
+        "PC-CF",
+        "PA-CF",
+        "TPU"
+      ],
+      "ams": {
+        "supported": true,
+        "name": "MMU3",
+        "max_colors": 5
+      },
+      "presets": [
+        {
+          "name": "0.10mm FAST DETAIL @XLIS 0.4",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.15mm SPEED @XLIS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "standard"
+        },
+        {
+          "name": "0.15mm STRUCTURAL @XLIS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "strength"
+        },
+        {
+          "name": "0.20mm SPEED @XLIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm STRUCTURAL @XLIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.20mm SOLUBLE INTERFACE @XLIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm BREAKAWAY INTERFACE @XLIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.28mm DRAFT @XLIS HF0.4",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "notes": "Five-toolhead toolchanger flagship (PrusaSlicer model 'Original Prusa XL - 5T Input Shaper', token @XL5IS; shares the @XLIS print profiles). Each of the 5 independent Nextruder toolheads holds its own filament/nozzle, giving true 5-material/5-color printing with per-tool calibration and no purge tower between most changes - distinct from MMU3 (which is single-nozzle multiplexing). Dual-tool (XL2IS) variant also exists. 360x360x360 build volume, segmented 16-zone heatbed, 290C nozzle / 120C bed. Multi-tool enables soluble/breakaway support interfaces (dedicated support material in a separate tool). 'Max colors' = 5 (one per tool).",
+      "sources": [
+        "https://www.prusa3d.com/product/original-prusa-xl-semi-assembled-3d-printer/",
+        "https://github.com/prusa3d/PrusaSlicer/blob/master/resources/profiles/PrusaResearch.ini"
+      ]
+    },
+    {
+      "make": "Prusa",
+      "model": "XL (single-tool)",
+      "slug": "prusa-xl-single",
+      "process": "fdm",
+      "build_volume_mm": [
+        360,
+        360,
+        360
+      ],
+      "nozzle_mm": 0.4,
+      "nozzle_options_mm": [
+        0.25,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8
+      ],
+      "bed_type": "Segmented heatbed with 16 individually controlled tiles; removable magnetic spring steel sheets (smooth/textured/satin); ships with satin PEI",
+      "max_nozzle_temp_c": 290,
+      "max_bed_temp_c": 120,
+      "default_materials": [
+        "PLA",
+        "PETG",
+        "ASA",
+        "ABS",
+        "PC",
+        "PA/Nylon",
+        "PC-CF",
+        "PA-CF",
+        "TPU"
+      ],
+      "ams": {
+        "supported": false,
+        "name": "MMU3",
+        "max_colors": 1
+      },
+      "presets": [
+        {
+          "name": "0.10mm FAST DETAIL @XLIS 0.4",
+          "layer_height_mm": 0.1,
+          "category": "fine"
+        },
+        {
+          "name": "0.15mm SPEED @XLIS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "standard"
+        },
+        {
+          "name": "0.15mm STRUCTURAL @XLIS 0.4",
+          "layer_height_mm": 0.15,
+          "category": "strength"
+        },
+        {
+          "name": "0.20mm SPEED @XLIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "standard"
+        },
+        {
+          "name": "0.20mm STRUCTURAL @XLIS 0.4",
+          "layer_height_mm": 0.2,
+          "category": "strength"
+        },
+        {
+          "name": "0.25mm STRUCTURAL @XLIS 0.4",
+          "layer_height_mm": 0.25,
+          "category": "draft"
+        },
+        {
+          "name": "0.25mm SPEED @XLIS HF0.4",
+          "layer_height_mm": 0.25,
+          "category": "draft"
+        },
+        {
+          "name": "0.28mm DRAFT @XLIS HF0.4",
+          "layer_height_mm": 0.28,
+          "category": "draft"
+        }
+      ],
+      "notes": "Large-format CoreXY with a unique segmented 16-zone (16-tile) heatbed and load-cell Nextruder. Single-tool variant carries one toolhead = one material. PrusaSlicer model token @XLIS (Input Shaper). 360x360x360 mm build volume, 290C nozzle / 120C bed. Uses a true toolchanger architecture rather than MMU3 for multi-material (see 5-tool variant). HF0.4 nozzle unlocks 0.25mm SPEED and 0.28mm DRAFT presets. Optional enclosure available.",
+      "sources": [
+        "https://www.prusa3d.com/product/original-prusa-xl-semi-assembled-3d-printer/",
+        "https://github.com/prusa3d/PrusaSlicer/blob/master/resources/profiles/PrusaResearch.ini"
+      ]
+    }
+  ]
+}

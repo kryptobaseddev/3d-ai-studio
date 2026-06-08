@@ -1,0 +1,21 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# node / web
+web/node_modules/
+web/dist/
+web/public/output/
+# generated model bundles (keep the folder, ignore contents)
+output/*/
+!output/.gitkeep
+# os
+.DS_Store
+
+# internal working metadata (CLEO tasks + council transcripts) — not plugin runtime
+.cleo/
+# generated manifest (clean installs regenerate via `studio3d manifest`)
+output/manifest.json
+# build caches
+*.tsbuildinfo

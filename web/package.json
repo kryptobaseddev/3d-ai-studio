@@ -1,0 +1,28 @@
+{
+  "name": "studio3d-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Static React + three.js viewer for studio3d print-ready models",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "sync": "node scripts/sync-output.mjs"
+  },
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "three": "0.184.0",
+    "@react-three/fiber": "9.6.1",
+    "@react-three/drei": "10.7.7"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "@types/three": "0.184.1",
+    "@vitejs/plugin-react": "6.0.2",
+    "typescript": "5.7.3",
+    "vite": "8.0.16"
+  }
+}

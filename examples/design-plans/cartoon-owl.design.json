@@ -1,0 +1,187 @@
+{
+  "schema_version": 3,
+  "id": "cartoon-owl",
+  "revision": 0,
+  "created_at": "2026-06-08T18:00:00Z",
+  "updated_at": "2026-06-08T18:00:00Z",
+  "subject": {
+    "name": "Cartoon Owl",
+    "prompt": "a cute cartoonish owl figurine for my desk",
+    "description": "A chunky, friendly desktop owl with oversized eyes and a tiny beak.",
+    "noun": "owl",
+    "tags": ["bird", "figurine", "desk-toy"]
+  },
+  "style": {
+    "preset": "cartoonish",
+    "intensity": 0.7,
+    "surface": "smooth",
+    "facet_level": 3,
+    "style_notes": "Big friendly round eyes, soft egg body, no sharp edges, slightly top-heavy head."
+  },
+  "category": "decorative",
+  "engine": "csg",
+  "dimensions_mm": { "width": 60, "depth": 56, "height": 95, "lock_aspect": true },
+  "wall_thickness_mm": 2.0,
+  "colors": [
+    { "name": "warm brown", "hex": "#8d6e63", "applies_to": ["body", "head", "ear_tuft", "wing", "foot"], "slot": 1 },
+    { "name": "cream disc", "hex": "#efe3c8", "applies_to": ["facial_disc"], "slot": 2 },
+    { "name": "amber eye", "hex": "#f4a82c", "applies_to": ["eye"], "slot": 3 },
+    { "name": "charcoal", "hex": "#2b2b2b", "applies_to": ["pupil", "beak"], "slot": 4 }
+  ],
+  "multicolor": true,
+  "characteristics": [
+    "round and chunky",
+    "top-heavy friendly head",
+    "stands upright unsupported",
+    "reads instantly as an owl"
+  ],
+  "unique_details": [
+    { "detail": "oversized round eyes", "part_ids": ["eye", "pupil"], "must_be_visible_from": ["front", "iso"] },
+    { "detail": "heart-shaped cream facial disc", "part_ids": ["facial_disc"], "must_be_visible_from": ["front"] },
+    { "detail": "tiny triangular beak between the eyes", "part_ids": ["beak"], "must_be_visible_from": ["front"] },
+    { "detail": "two pointed ear tufts on top", "part_ids": ["ear_tuft"], "must_be_visible_from": ["front", "iso"] },
+    { "detail": "stubby folded wings hugging the sides", "part_ids": ["wing"], "must_be_visible_from": ["right", "iso"] }
+  ],
+  "reference_images": [
+    { "path": "refs/owl-cartoon-front.png", "role": "front", "caption": "front silhouette: big eyes occupy ~40% of head width", "source": "packaged-reference:owl@cartoonish" },
+    { "path": "refs/owl-cartoon-side.png", "role": "side", "caption": "side: beak protrudes, wings flat against body", "source": "packaged-reference:owl@cartoonish" },
+    { "path": "refs/owl-style-target.png", "role": "style-target", "caption": "desired chunky/rounded cartoon read", "source": "user-supplied" }
+  ],
+  "reference_guide": {
+    "pack_id": "owl@cartoonish",
+    "proportions": {
+      "head_width_to_body_width": 0.92,
+      "eye_diameter_to_head_width": 0.42,
+      "pupil_to_eye": 0.45,
+      "facial_disc_width_to_head_width": 0.85,
+      "beak_height_to_head_height": 0.18,
+      "body_height_to_total": 0.6
+    },
+    "feature_checklist": [
+      "two large forward-facing eyes",
+      "facial disc framing the eyes",
+      "small downward beak centered between eyes",
+      "ear tufts or rounded head crown",
+      "upright egg/teardrop body",
+      "flat stable base"
+    ]
+  },
+  "printer_profile": "fdm_0.4",
+  "material": "PLA",
+  "active_printer_slug": "bambu-a1",
+  "parameters": {
+    "eye_diameter": { "value": 22, "type": "number", "label": "Eye diameter", "unit": "mm", "min": 10, "max": 30, "step": 1, "group": "Face" },
+    "head_diameter": { "value": 48, "type": "number", "label": "Head diameter", "unit": "mm", "min": 30, "max": 60, "step": 1, "group": "Body" },
+    "ear_tuft_height": { "value": 20, "type": "number", "label": "Ear tuft height", "unit": "mm", "min": 0, "max": 30, "step": 1, "group": "Face" }
+  },
+  "parts": [
+    {
+      "id": "body",
+      "name": "body",
+      "approach": "ellipsoid",
+      "op": "add",
+      "size_mm": [46, 40, 70],
+      "anchor": { "at": [0, 0, 35] },
+      "purpose": "upright egg body, wider at the bottom for a stable base",
+      "realizes_detail": [],
+      "params": { "subdivisions": 3 }
+    },
+    {
+      "id": "head",
+      "name": "head",
+      "approach": "sphere",
+      "op": "add",
+      "size_mm": [48],
+      "anchor": { "at": [0, 0, 64] },
+      "purpose": "round head merged into the body (no neck)",
+      "params": { "subdivisions": 3 }
+    },
+    {
+      "id": "facial_disc",
+      "name": "facial disc",
+      "approach": "ellipsoid",
+      "op": "add",
+      "size_mm": [40, 10, 34],
+      "anchor": { "at": [0, -19, 60] },
+      "purpose": "raised cream disc on the front of the head that frames the eyes",
+      "realizes_detail": ["heart-shaped cream facial disc"],
+      "color_ref": "cream disc"
+    },
+    {
+      "id": "ear_tuft",
+      "name": "ear tuft",
+      "approach": "cone",
+      "op": "add",
+      "size_mm": [20, 14, 0],
+      "anchor": { "at": [13, -2, 82], "mirror_x": true },
+      "rotation_deg": [0, 18, 0],
+      "purpose": "two pointed ear tufts angled outward on top of the head",
+      "realizes_detail": ["two pointed ear tufts on top"]
+    },
+    {
+      "id": "eye",
+      "name": "eye",
+      "approach": "sphere",
+      "op": "add",
+      "size_mm": [22],
+      "anchor": { "at": [11, -24, 62], "mirror_x": true },
+      "purpose": "oversized raised eye boss",
+      "realizes_detail": ["oversized round eyes"],
+      "color_ref": "amber eye",
+      "params": { "subdivisions": 3 }
+    },
+    {
+      "id": "pupil",
+      "name": "pupil",
+      "approach": "sphere",
+      "op": "cut",
+      "size_mm": [10],
+      "anchor": { "at": [11, -31, 62], "mirror_x": true },
+      "purpose": "carved pupil giving the eye depth and a friendly read",
+      "realizes_detail": ["oversized round eyes"],
+      "color_ref": "charcoal"
+    },
+    {
+      "id": "beak",
+      "name": "beak",
+      "approach": "cone",
+      "op": "add",
+      "size_mm": [12, 10, 0],
+      "anchor": { "at": [0, -27, 53] },
+      "rotation_deg": [-90, 0, 0],
+      "purpose": "tiny triangular downward beak centered between the eyes",
+      "realizes_detail": ["tiny triangular beak between the eyes"],
+      "color_ref": "charcoal"
+    },
+    {
+      "id": "wing",
+      "name": "wing",
+      "approach": "ellipsoid",
+      "op": "add",
+      "size_mm": [12, 30, 50],
+      "anchor": { "at": [22, 2, 34], "mirror_x": true },
+      "purpose": "stubby folded wings hugging the sides",
+      "realizes_detail": ["stubby folded wings hugging the sides"]
+    },
+    {
+      "id": "foot",
+      "name": "foot",
+      "approach": "ellipsoid",
+      "op": "add",
+      "size_mm": [16, 22, 10],
+      "anchor": { "at": [12, -8, 4], "mirror_x": true },
+      "purpose": "two stubby feet so it stands flat",
+      "realizes_detail": []
+    }
+  ],
+  "assembly": { "root": "body", "on_bed": true, "fit_to_envelope": true },
+  "constraints": {
+    "min_wall_mm": 0.8,
+    "min_feature_mm": 0.4,
+    "max_overhang_deg": 50,
+    "clearance_mm": 0.2,
+    "must_stand_unsupported": true
+  },
+  "outputs": { "formats": ["stl", "3mf", "glb"] },
+  "history": []
+}
