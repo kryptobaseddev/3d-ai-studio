@@ -100,6 +100,64 @@ def export_3mf(mesh: trimesh.Trimesh, path: str, color: str | None = "#9aa7b2",
     return path
 
 
+def export_3mf_multi(parts: "list[tuple]", path: str, name: str = "assembly") -> str:
+    """Write a multi-object 3MF — one ``<object>`` per part, each with its own
+    colorgroup. ``parts`` is a list of ``(mesh, color_hex, part_name)``. This is
+    what carries per-part AMS color (multicolor prints) AND lays out an assembly's
+    parts as distinct buildable objects — a thing diffusion-mesh tools cannot emit."""
+    resources = []
+    items = []
+    cg_id = 1          # colorgroup ids
+    obj_id = 100       # object ids (avoid clashing with colorgroup ids)
+    for i, (mesh, color, pname) in enumerate(parts):
+        verts = np.asarray(mesh.vertices, dtype=float)
+        faces = np.asarray(mesh.faces, dtype=int)
+        v_lines = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>' for x, y, z in verts)
+        t_lines = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in faces)
+        col = (color or "#9aa7b2").upper()
+        if len(col) == 7:
+            col += "FF"
+        resources.append(f'    <m:colorgroup id="{cg_id}"><m:color color="{col}"/></m:colorgroup>')
+        resources.append(
+            f'    <object id="{obj_id}" type="model" pid="{cg_id}" pindex="0">'
+            f'<mesh><vertices>{v_lines}</vertices><triangles>{t_lines}</triangles></mesh></object>'
+        )
+        items.append(f'    <item objectid="{obj_id}"/>')
+        cg_id += 1
+        obj_id += 1
+
+    model_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<model unit="millimeter" xml:lang="en-US" '
+        'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
+        'xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">\n'
+        f'  <metadata name="Title">{_xml_escape(name)}</metadata>\n'
+        '  <metadata name="Application">studio3d</metadata>\n'
+        '  <resources>\n' + "\n".join(resources) + '\n  </resources>\n'
+        '  <build>\n' + "\n".join(items) + '\n  </build>\n'
+        '</model>\n'
+    )
+    content_types = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>'
+        '</Types>'
+    )
+    rels = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Target="/3D/3dmodel.model" Id="rel0" '
+        'Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>'
+        '</Relationships>'
+    )
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml", content_types)
+        z.writestr("_rels/.rels", rels)
+        z.writestr("3D/3dmodel.model", model_xml)
+    return path
+
+
 # ======================================================================
 # Thumbnail (headless)
 # ======================================================================
@@ -181,6 +239,20 @@ def write_bundle(mesh: trimesh.Trimesh, out_dir: str, spec, report, formats: Ite
     except Exception as e:
         files["thumb_error"] = f"{type(e).__name__}: {e}"
 
+    # parametric SOURCE — ship the regenerable model, not just a dead mesh. This
+    # is the structural moat over Meshy: a knob-driven, version-controllable,
+    # forever-editable part. The script + named parameters live in every bundle.
+    script = getattr(spec, "script", None)
+    if script:
+        with open(os.path.join(out_dir, "model.py"), "w", encoding="utf-8") as f:
+            f.write(script)
+        files["source"] = "model.py"
+    params = getattr(spec, "parameters", None)
+    if params:
+        with open(os.path.join(out_dir, "params.json"), "w", encoding="utf-8") as f:
+            json.dump(params, f, indent=2)
+        files["params"] = "params.json"
+
     # spec + report
     with open(os.path.join(out_dir, "spec.json"), "w", encoding="utf-8") as f:
         f.write(spec.to_json())
@@ -195,11 +267,14 @@ def write_bundle(mesh: trimesh.Trimesh, out_dir: str, spec, report, formats: Ite
         "engine": spec.resolved_engine,
         "printer_profile": spec.printer_profile,
         "files": files,
+        "editable": bool(script),
+        "parameters": params or {},
         "print_ready": report.print_ready if hasattr(report, "print_ready") else None,
         "score": report.score if hasattr(report, "score") else None,
         "bbox_mm": report.metrics.get("bbox_mm") if hasattr(report, "metrics") else None,
         "bed_mm": report.dimensions.get("D3_print_geometry", {}).get("bed_mm") if hasattr(report, "dimensions") else None,
         "est_mass_g": report.metrics.get("est_mass_g_solid") if hasattr(report, "metrics") else None,
+        "kernel_metrics": report.metrics.get("kernel_metrics") if hasattr(report, "metrics") else None,
         "color": color,
     }
     return entry
@@ -224,7 +299,9 @@ def write_manifest(output_root: str) -> str:
                     spec = json.load(f)
             files = {}
             for fn, key in (("model.stl", "stl"), ("model.3mf", "3mf"),
-                            ("model.glb", "glb"), ("thumb.png", "thumb")):
+                            ("model.glb", "glb"), ("thumb.png", "thumb"),
+                            ("model.py", "source"), ("params.json", "params"),
+                            ("design.json", "plan"), ("certificate.json", "certificate")):
                 if os.path.exists(os.path.join(d, fn)):
                     files[key] = fn
             bundles.append({
@@ -234,11 +311,15 @@ def write_manifest(output_root: str) -> str:
                 "category": spec.get("category"),
                 "printer_profile": spec.get("printer_profile"),
                 "files": files,
+                "editable": os.path.exists(os.path.join(d, "model.py")),
+                "parameters": spec.get("parameters", {}),
                 "print_ready": rep.get("print_ready"),
                 "score": rep.get("score"),
                 "bbox_mm": rep.get("metrics", {}).get("bbox_mm"),
                 "bed_mm": rep.get("dimensions", {}).get("D3_print_geometry", {}).get("bed_mm"),
                 "est_mass_g": rep.get("metrics", {}).get("est_mass_g_solid"),
+                "kernel_metrics": rep.get("metrics", {}).get("kernel_metrics"),
+                "slice": rep.get("dimensions", {}).get("D2_slicer_pass", {}),
                 "color": spec.get("color"),
             })
         except Exception:

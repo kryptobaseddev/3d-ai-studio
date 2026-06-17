@@ -74,7 +74,7 @@ def _apply_profile(spec):
     return bed, prof
 
 
-def _fabricate(spec, output_root: str, timeout: float = 60.0) -> dict:
+def _fabricate(spec, output_root: str, timeout: float = 60.0, do_slice: bool = True) -> dict:
     """Run the engine -> validate -> export bundle. Returns a result dict."""
     from .validate import validate
     from . import exporters
@@ -87,12 +87,14 @@ def _fabricate(spec, output_root: str, timeout: float = 60.0) -> dict:
             raise SystemExit("spec.engine=csg requires a `script` (DSL source)")
         from .sandbox import run_script_text
         _eprint(f"[studio3d] executing CSG script in sandbox (timeout={timeout}s)…")
-        mesh = run_script_text(spec.script, timeout=timeout)
+        mesh = run_script_text(spec.script, timeout=timeout, params=spec.parameters or {})
     else:
         from .generative import generate
         _eprint("[studio3d] routing to generative backend…")
         mesh, gen_info = generate(spec)
         provenance.update(gen_info)
+        if gen_info.get("heal"):
+            _eprint(f"[studio3d] healed generative mesh: watertight {gen_info['heal'].get('watertight_after')}")
 
     bed, prof = _apply_profile(spec)
     if prof:
@@ -100,7 +102,12 @@ def _fabricate(spec, output_root: str, timeout: float = 60.0) -> dict:
         _eprint(f"[studio3d] targeting active profile: {prof.name} ({prof.make} {prof.model}, bed {bed}mm)")
     _eprint("[studio3d] validating print-readiness…")
     report = validate(mesh, printer_profile=spec.printer_profile,
-                      material=spec.material, multicolor=spec.multicolor, bed_mm=bed)
+                      material=spec.material, multicolor=spec.multicolor, bed_mm=bed,
+                      do_slice=do_slice)
+    d2m = report.dimensions.get("D2_slicer_pass", {}).get("method")
+    if d2m == "slice":
+        _eprint(f"[studio3d] D2 real slice via {report.dimensions['D2_slicer_pass'].get('slicer')}: "
+                f"sliced={report.dimensions['D2_slicer_pass'].get('pass')}")
 
     bundle_dir = _bundle_dir(output_root, spec.slug, variant=getattr(spec, "_variant", False))
     _eprint(f"[studio3d] writing bundle -> {bundle_dir}")
@@ -112,6 +119,15 @@ def _fabricate(spec, output_root: str, timeout: float = 60.0) -> dict:
     plan = getattr(spec, "_plan", None)
     if plan is not None:
         plan.save(os.path.join(bundle_dir, "design.json"))
+    # write the auditable Print-Readiness Certificate (prompt -> script hash ->
+    # file hashes -> D1-D4 -> slice -> human-approval slot)
+    try:
+        from .certify import write_certificate
+        from datetime import datetime, timezone
+        write_certificate(spec, report, bundle_dir, provenance,
+                          timestamp=datetime.now(timezone.utc).isoformat())
+    except Exception as e:
+        _eprint(f"[studio3d] (certificate skipped: {e})")
     manifest_path = exporters.write_manifest(output_root)
     # commit this revision to the design history (single evolving bundle)
     try:
@@ -126,10 +142,13 @@ def _fabricate(spec, output_root: str, timeout: float = 60.0) -> dict:
         "print_ready": report.print_ready,
         "score": report.score,
         "files": entry["files"],
+        "editable": entry.get("editable"),
         "summary": {
             "bbox_mm": report.metrics.get("bbox_mm"),
             "est_mass_g": report.metrics.get("est_mass_g_solid"),
             "triangles": report.metrics.get("triangles"),
+            "kernel_metrics": report.metrics.get("kernel_metrics"),
+            "d2": report.dimensions.get("D2_slicer_pass"),
             "issues": report.issues,
             "warnings": report.warnings,
             "suggestions": report.suggestions,
@@ -151,7 +170,8 @@ def cmd_gen(args) -> int:
     else:
         spec = ModelSpec.from_json(sys.stdin.read())
     try:
-        res = _fabricate(spec, args.out, timeout=args.timeout)
+        res = _fabricate(spec, args.out, timeout=args.timeout,
+                         do_slice=not getattr(args, "no_slice", False))
     except Exception as e:
         return _emit({"error": f"{type(e).__name__}: {e}"}, ok=False)
     return _emit(res)
@@ -160,12 +180,20 @@ def cmd_gen(args) -> int:
 def cmd_gen_script(args) -> int:
     from .spec import ModelSpec
     script = _read_script(args)
+    params = {}
+    if getattr(args, "params", None):
+        try:
+            params = json.loads(args.params)
+        except Exception as e:
+            return _emit({"error": f"--params is not valid JSON: {e}"}, ok=False)
     plan = None
     if getattr(args, "plan", None):
         from .design_plan import DesignPlan
         plan = DesignPlan.load(args.plan)
         spec = plan.to_spec(script=script)
         spec.formats = [f.strip() for f in args.formats.split(",") if f.strip()]
+        if params:
+            spec.parameters = {**(spec.parameters or {}), **params}
         if args.color:
             spec.color = args.color
     else:
@@ -176,6 +204,7 @@ def cmd_gen_script(args) -> int:
             style=getattr(args, "style", "clean"),
             engine="csg",
             script=script,
+            parameters=params,
             printer_profile=args.profile,
             material=args.material,
             color=args.color,
@@ -185,7 +214,8 @@ def cmd_gen_script(args) -> int:
     spec._variant = getattr(args, "variant", False)
     spec._plan = plan  # stashed so _fabricate can copy design.json into the bundle
     try:
-        res = _fabricate(spec, args.out, timeout=args.timeout)
+        res = _fabricate(spec, args.out, timeout=args.timeout,
+                         do_slice=not getattr(args, "no_slice", False))
     except Exception as e:
         return _emit({"error": f"{type(e).__name__}: {e}"}, ok=False)
     return _emit(res)
@@ -216,10 +246,77 @@ def cmd_validate(args) -> int:
         if isinstance(mesh, trimesh.Scene):
             mesh = trimesh.util.concatenate([g for g in mesh.geometry.values()])
         report = validate(mesh, printer_profile=args.profile, material=args.material,
-                          multicolor=args.multicolor, do_repair=not args.no_repair)
+                          multicolor=args.multicolor, do_repair=not args.no_repair,
+                          do_slice=getattr(args, "slice", False), model_path=args.mesh)
     except Exception as e:
         return _emit({"error": f"{type(e).__name__}: {e}"}, ok=False)
     return _emit(report.to_dict())
+
+
+def cmd_slice(args) -> int:
+    """Real headless slice-to-G-code (D2 ground truth): print time + filament."""
+    from .slicer import slice_model, detect_slicer
+    sl = detect_slicer()
+    if not sl:
+        return _emit({"available": False,
+                      "hint": "install OrcaSlicer/PrusaSlicer or set $STUDIO3D_SLICER to the CLI"}, ok=False)
+    res = slice_model(args.mesh, material=args.material, timeout=args.timeout)
+    return _emit(res, ok=bool(res.get("sliced")))
+
+
+def cmd_tweak(args) -> int:
+    """Edit ONE named parameter on a design plan and regenerate deterministically
+    in place — the proof a model is forever-editable, which Meshy's dead mesh isn't."""
+    from .design_plan import DesignPlan
+    plan = DesignPlan.load(args.plan)
+    # parse --set key=value pairs (numbers stay numeric)
+    for kv in (args.set or []):
+        if "=" not in kv:
+            return _emit({"error": f"--set expects key=value, got {kv!r}"}, ok=False)
+        k, v = kv.split("=", 1)
+        try:
+            val = json.loads(v)        # 4.0 -> float, "x" -> needs quotes, true -> bool
+        except Exception:
+            val = v
+        plan.set_param(k.strip(), val)
+    plan.bump_revision()
+    plan.save(args.plan)
+    if not args.script:
+        return _emit({"plan": args.plan, "revision": plan.data.get("revision"),
+                      "parameters": plan.data.get("parameters", {}),
+                      "hint": "pass --script model.py to regenerate now"})
+    script = open(args.script).read()
+    spec = plan.to_spec(script=script)
+    spec._plan = plan
+    try:
+        res = _fabricate(spec, args.out, timeout=args.timeout,
+                         do_slice=not getattr(args, "no_slice", False))
+    except Exception as e:
+        return _emit({"error": f"{type(e).__name__}: {e}"}, ok=False)
+    res["revision"] = plan.data.get("revision")
+    res["parameters"] = plan.data.get("parameters", {})
+    return _emit(res)
+
+
+def cmd_kb(args) -> int:
+    """Query the local DFAM/CSG domain-RAG (grounds the cad-author in documented
+    rules — the report's BlenderRAG capability lever, offline)."""
+    from . import kb
+    if not args.query:
+        return _emit({"stats": kb.stats(),
+                      "hint": "studio3d kb 'overhang limit and supports'"})
+    hits = kb.search(args.query, k=args.k)
+    return _emit({"query": args.query, "hits": hits, "n": len(hits)})
+
+
+def cmd_muse(args) -> int:
+    """Run the internal MUSE-style print-readiness benchmark + report the score."""
+    from . import muse
+    res = muse.run(do_slice=getattr(args, "slice", False), timeout=args.timeout)
+    if not args.full:
+        res["cases"] = [{"name": c["name"], "muse": c["muse"], "print_ready": c.get("print_ready"),
+                         "error": c.get("error")} for c in res["cases"]]
+    return _emit(res)
 
 
 def cmd_manifest(args) -> int:
@@ -460,6 +557,7 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--json", help="inline ModelSpec JSON string")
     g.add_argument("--out", default="output", help="output root (default: output)")
     g.add_argument("--timeout", type=float, default=60.0)
+    g.add_argument("--no-slice", action="store_true", help="skip the real D2 slice (use the labeled proxy)")
     g.set_defaults(func=cmd_gen)
 
     gs = sub.add_parser("gen-script", help="full pipeline from a raw DSL script")
@@ -478,6 +576,8 @@ def build_parser() -> argparse.ArgumentParser:
     gs.add_argument("--timeout", type=float, default=60.0)
     gs.add_argument("--variant", action="store_true", help="write a separate copy instead of overwriting the design in place")
     gs.add_argument("--plan", help="design.json plan to fabricate from (sets style/size/color/category)")
+    gs.add_argument("--params", help="JSON dict of named parameters injected as P (e.g. '{\"hole_d\":4.5}')")
+    gs.add_argument("--no-slice", action="store_true", help="skip the real D2 slice (use the labeled proxy)")
     gs.set_defaults(func=cmd_gen_script)
 
     rs = sub.add_parser("run-script", help="sandbox-execute a DSL script to a mesh file")
@@ -493,7 +593,34 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--material", default="PLA")
     v.add_argument("--multicolor", action="store_true")
     v.add_argument("--no-repair", action="store_true")
+    v.add_argument("--slice", action="store_true", help="run a REAL headless slice for D2 (needs a slicer installed)")
     v.set_defaults(func=cmd_validate)
+
+    sl = sub.add_parser("slice", help="real headless slice-to-G-code (D2 ground truth)")
+    sl.add_argument("mesh", help="path to STL/3MF to slice")
+    sl.add_argument("--material", default="PLA")
+    sl.add_argument("--timeout", type=float, default=120.0)
+    sl.set_defaults(func=cmd_slice)
+
+    tw = sub.add_parser("tweak", help="edit one design-plan parameter and regenerate in place")
+    tw.add_argument("--plan", required=True, help="design.json to tweak")
+    tw.add_argument("--set", action="append", help="key=value (repeatable), value is JSON (4.0, true, \"text\")")
+    tw.add_argument("--script", help="model.py to regenerate from (omit to only edit the plan)")
+    tw.add_argument("--out", default="output")
+    tw.add_argument("--timeout", type=float, default=60.0)
+    tw.add_argument("--no-slice", action="store_true")
+    tw.set_defaults(func=cmd_tweak)
+
+    kbp = sub.add_parser("kb", help="query the local DFAM/CSG domain knowledge base")
+    kbp.add_argument("query", nargs="?", help="what to look up (e.g. 'overhang limit')")
+    kbp.add_argument("-k", type=int, default=4, help="number of chunks to return")
+    kbp.set_defaults(func=cmd_kb)
+
+    mu = sub.add_parser("muse", help="run the internal MUSE print-readiness benchmark")
+    mu.add_argument("--slice", action="store_true", help="use real slicing for D2 (needs a slicer)")
+    mu.add_argument("--full", action="store_true", help="include per-case dimension detail")
+    mu.add_argument("--timeout", type=float, default=60.0)
+    mu.set_defaults(func=cmd_muse)
 
     m = sub.add_parser("manifest", help="(re)build output/manifest.json")
     m.add_argument("--out", default="output")

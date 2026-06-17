@@ -126,7 +126,12 @@ class DesignPlan:
             multicolor=bool(self.data.get("multicolor", False)),
             reference_images=self.data.get("reference_images", []),
             notes=self.data.get("notes", ""),
+            parameters=self.data.get("parameters", {}) or {},
         )
+
+    def set_param(self, key: str, value):
+        """Set a named parameter on the plan (used by `studio3d tweak`)."""
+        self.data.setdefault("parameters", {})[key] = value
 
     def brief(self) -> dict:
         """Reference-grounded brief (subject cues + style params) for the agent."""

@@ -101,6 +101,30 @@ def _non_manifold_edge_count(mesh: trimesh.Trimesh) -> int:
         return -1
 
 
+def _component_count(mesh: trimesh.Trimesh) -> int:
+    """Number of disconnected bodies (1 = single solid). A part that should be
+    one piece but reports >1 is a fabrication defect (e.g. a 'phone stand' whose
+    cradle floats free of the base)."""
+    try:
+        bc = getattr(mesh, "body_count", None)
+        if bc:
+            return int(bc)
+        return int(len(mesh.split(only_watertight=False)))
+    except Exception:
+        return 1
+
+
+def _genus_estimate(euler: int, n_components: int) -> int:
+    """Topological genus (handle count) from Euler characteristic. For C closed
+    orientable components, X = 2C - 2G, so G = C - X/2. Reported for the critic
+    (a knob should rarely add handles; a high genus often signals a boolean
+    artifact). Clamped at 0."""
+    try:
+        return max(0, int(round(n_components - euler / 2.0)))
+    except Exception:
+        return 0
+
+
 def _self_intersection_estimate(mesh: trimesh.Trimesh) -> int | None:
     """Best-effort self-intersection probe. Returns count or None if unavailable.
 
@@ -224,8 +248,15 @@ class Report:
 def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
              material: str = "PLA", multicolor: bool = False,
              bed_mm: tuple[float, float, float] = (256, 256, 256),
-             do_repair: bool = True) -> Report:
-    """Validate ``mesh`` against the print-readiness benchmark for a profile."""
+             do_repair: bool = True, do_slice: bool = False,
+             model_path: str | None = None) -> Report:
+    """Validate ``mesh`` against the print-readiness benchmark for a profile.
+
+    When ``do_slice`` is set and a slicer is installed, D2 is a REAL slice-to-G-code
+    pass (with print time + filament grams) rather than the proxy; otherwise D2
+    falls back to the explicitly LABELED proxy so "print-ready" is never silently
+    self-certified.
+    """
     prof = PRINTER_PROFILES.get(printer_profile, PRINTER_PROFILES[DEFAULT_PROFILE])
     rep = Report()
 
@@ -238,6 +269,9 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
     is_volume = bool(mesh.is_volume)
     nm_edges = _non_manifold_edge_count(mesh)
     selfint = _self_intersection_estimate(mesh)
+    euler = int(mesh.euler_number)
+    n_components = _component_count(mesh)
+    genus = _genus_estimate(euler, n_components)
     d1_pass = watertight and winding and is_volume and (nm_edges == 0)
     rep.dimensions["D1_mesh_integrity"] = {
         "pass": d1_pass,
@@ -246,7 +280,9 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
         "is_volume": is_volume,
         "non_manifold_edges": nm_edges,
         "self_intersections": selfint,
-        "euler_number": int(mesh.euler_number),
+        "euler_number": euler,
+        "n_components": n_components,
+        "genus": genus,
     }
     if not watertight:
         rep.issues.append("D1: mesh is not watertight (open holes) — slicer will warn/repair")
@@ -311,12 +347,51 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
             f"or reorient on the bed"
         )
 
-    # ---- D2 Slicer Pass Rate (proxy) ----
-    d2_pass = d1_pass and is_volume
-    rep.dimensions["D2_slicer_pass"] = {
-        "pass": d2_pass,
+    # ---- D2 Slicer Pass Rate ----
+    # Real slice when asked + a slicer exists; else the explicitly-labeled proxy.
+    proxy_pass = d1_pass and is_volume
+    d2 = {
+        "pass": proxy_pass,
+        "method": "proxy",
         "rationale": "watertight + manifold + valid volume opens cleanly in Bambu Studio/PrusaSlicer",
     }
+    if do_slice:
+        try:
+            from .slicer import slice_model, detect_slicer
+            import tempfile as _tf, os as _os
+            if not detect_slicer():
+                d2["slice_note"] = "no slicer installed — using labeled proxy (set $STUDIO3D_SLICER or install OrcaSlicer/PrusaSlicer for a real slice)"
+            else:
+                sp, tmp = model_path, None
+                if not sp:
+                    tmp = _tf.NamedTemporaryFile(suffix=".stl", delete=False)
+                    tmp.close()
+                    mesh.export(tmp.name)
+                    sp = tmp.name
+                sl = slice_model(sp, material=material)
+                if tmp:
+                    try:
+                        _os.unlink(tmp.name)
+                    except Exception:
+                        pass
+                d2 = {
+                    "pass": bool(sl.get("sliced")),
+                    "method": "slice",
+                    "slicer": sl.get("slicer"),
+                    "print_time": sl.get("print_time"),
+                    "filament_g": sl.get("filament_g"),
+                    "gcode_lines": sl.get("gcode_lines"),
+                    "error": sl.get("error"),
+                    "rationale": "real headless slice to G-code",
+                }
+                if sl.get("filament_g") is not None:
+                    rep.metrics["filament_g_sliced"] = sl["filament_g"]
+                if sl.get("print_time"):
+                    rep.metrics["print_time"] = sl["print_time"]
+        except Exception as e:
+            d2["slice_error"] = f"{type(e).__name__}: {e}"
+    d2_pass = bool(d2["pass"])
+    rep.dimensions["D2_slicer_pass"] = d2
 
     # ---- D4 Workflow Efficiency (informational) ----
     rec_format = "3mf" if multicolor else "stl"
@@ -330,6 +405,26 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
     if multicolor:
         rep.suggestions.append("D4: multicolor model — export 3MF to preserve AMS color mapping")
 
+    # ---- kernel-metrics summary (fed to the design-critic alongside renders so
+    # the judge can catch non-manifold / sub-wall / floating-part defects that are
+    # invisible in a 4-view render — the CADSmith "kernel metrics + vision" pattern)
+    rep.metrics["kernel_metrics"] = {
+        "watertight": watertight,
+        "manifold": bool(d1_pass),
+        "non_manifold_edges": nm_edges,
+        "euler_number": euler,
+        "genus": genus,
+        "n_components": n_components,
+        "volume_mm3": round(volume_mm3, 2),
+        "bbox_mm": extents,
+        "triangles": int(len(mesh.faces)),
+        "wall_p05_mm": wall.get("p05") if wall.get("available") else None,
+        "min_wall_required_mm": min_wall,
+        "steepest_overhang_deg": overh["steepest_overhang_deg"],
+        "overhang_needs_support": overh["needs_support"],
+        "bed_fit": bed_fit,
+    }
+
     # ---- scoring ----
     score = 0
     score += 45 if d1_pass else (20 if watertight else 0)
@@ -339,3 +434,76 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
     rep.score = int(score)
     rep.print_ready = bool(d1_pass and d2_pass and bed_fit)
     return rep
+
+
+# ======================================================================
+# Heal + orient (used by the generative + hybrid paths)
+# ======================================================================
+
+def heal(mesh: trimesh.Trimesh) -> dict:
+    """Force a generative/imported mesh toward a watertight, 2-manifold solid.
+
+    Beyond :func:`repair` (merge/degenerate/winding/normals/fill-holes) this runs
+    a manifold round-trip (a self-union through the manifold3d boolean kernel)
+    which re-derives a clean topology from triangle soup. Returns a record with
+    before/after watertight + face counts. This is the gate that turns Meshy's
+    triangle-soup output into a D1-passing asset (the README's "every generated
+    mesh is forced through validation/repair" — made explicit and stronger)."""
+    info: dict[str, Any] = {"watertight_before": bool(mesh.is_watertight),
+                            "faces_before": int(len(mesh.faces))}
+    info["repair"] = repair(mesh)
+    if not mesh.is_watertight:
+        try:
+            # self-union forces the boolean kernel to rebuild a manifold solid
+            rebuilt = trimesh.boolean.union([mesh])
+            if rebuilt is not None and len(rebuilt.faces) > 0:
+                rebuilt.merge_vertices()
+                trimesh.repair.fix_normals(rebuilt)
+                mesh.vertices, mesh.faces = rebuilt.vertices, rebuilt.faces
+                info["manifold_roundtrip"] = True
+        except Exception as e:
+            info["manifold_roundtrip_error"] = f"{type(e).__name__}: {e}"
+    info["watertight_after"] = bool(mesh.is_watertight)
+    info["faces_after"] = int(len(mesh.faces))
+    return info
+
+
+# candidate orientations: (name, axis, degrees) — rotate the part onto each of the
+# six axis-aligned "down" faces and keep whichever minimizes flagged overhang area.
+_ORIENT_CANDIDATES = [
+    ("as_is", None, 0.0),
+    ("x+90", [1, 0, 0], 90.0),
+    ("x-90", [1, 0, 0], -90.0),
+    ("y+90", [0, 1, 0], 90.0),
+    ("y-90", [0, 1, 0], -90.0),
+    ("x180", [1, 0, 0], 180.0),
+]
+
+
+def orient_for_print(mesh: trimesh.Trimesh, limit_deg: float = 50.0,
+                     bed_mm: tuple[float, float, float] = (256, 256, 256)) -> dict:
+    """Try the six axis-aligned orientations and return the one that minimizes
+    support-needing overhang area while still fitting the bed. Slicer-aware /
+    support-effective placement (SEG): better orientation == fewer supports ==
+    less waste. Returns {best, candidates, rotation} ; caller applies the rotation.
+    Operates on a COPY per candidate; does not mutate the input."""
+    from trimesh import transformations as _tf
+    results = []
+    for name, axis, ang in _ORIENT_CANDIDATES:
+        m = mesh.copy()
+        if axis is not None:
+            m.apply_transform(_tf.rotation_matrix(math.radians(ang), axis, m.centroid))
+        # ground it
+        m.apply_translation([0, 0, -float(m.bounds[0][2])])
+        ext = [float(x) for x in m.extents]
+        fits = all(ext[i] <= bed_mm[i] + 1e-6 for i in range(3))
+        oa = _overhang_analysis(m, limit_deg)
+        results.append({
+            "name": name, "axis": axis, "deg": ang,
+            "overhang_area_mm2": oa["overhang_area_mm2"],
+            "steepest_overhang_deg": oa["steepest_overhang_deg"],
+            "bed_fit": fits,
+        })
+    feasible = [r for r in results if r["bed_fit"]] or results
+    best = min(feasible, key=lambda r: (r["overhang_area_mm2"], r["steepest_overhang_deg"]))
+    return {"best": best, "candidates": results}

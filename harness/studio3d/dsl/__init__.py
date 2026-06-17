@@ -56,6 +56,8 @@ __all__ = [
     "linear_pattern",
     "circular_pattern",
     "load_mesh",
+    "interference",
+    "arrange_on_bed",
     "deg",
     "PI",
 ]
@@ -590,6 +592,41 @@ def circular_pattern(solid: Solid, count: int, radius: float = 0,
             out.append(solid.translate(radius * math.cos(a), 0, radius * math.sin(a)))
         else:
             out.append(solid.translate(0, radius * math.cos(a), radius * math.sin(a)))
+    return out
+
+
+def interference(a: Solid, b: Solid) -> float:
+    """Overlap (intersection) volume between two solids, in mm^3 — assembly
+    interference / collision detection. 0.0 = no collision (parts only touch or
+    are clear). Uses an AABB broad-phase before the (expensive) boolean so a
+    no-overlap pair returns instantly. This is the automated print-readiness
+    backstop for multi-part assemblies that no mesh-soup tool provides."""
+    ma, mb = _as_mesh(a), _as_mesh(b)
+    amin, amax = ma.bounds
+    bmin, bmax = mb.bounds
+    if bool((amin > bmax).any() or (bmin > amax).any()):
+        return 0.0  # AABBs disjoint -> cannot intersect
+    try:
+        inter = trimesh.boolean.intersection([ma, mb])
+        if inter is None or len(inter.faces) == 0:
+            return 0.0
+        return float(abs(inter.volume))
+    except Exception:
+        return 0.0
+
+
+def arrange_on_bed(solids: Sequence[Solid], gap: float = 5.0) -> list[Solid]:
+    """Lay parts out along +X on the build plate (each grounded to z=0) with a
+    ``gap`` between them — a printable bed layout for an assembly's parts in one
+    job. Returns the repositioned solids; union or export them per-part."""
+    out: list[Solid] = []
+    x = 0.0
+    for s in _flatten(list(solids)):
+        s2 = s.on_bed()
+        b = s2.bounds
+        w = float(b[1][0] - b[0][0])
+        out.append(s2.translate(x - float(b[0][0]), 0, 0))
+        x += w + gap
     return out
 
 

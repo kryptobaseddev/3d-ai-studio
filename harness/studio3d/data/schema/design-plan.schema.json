@@ -164,6 +164,37 @@
       "type": "object",
       "additionalProperties": true
     },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "named, tweakable knobs the model script reads via P (e.g. {\"hole_d\": 4.5}). `studio3d tweak` edits these and regenerates deterministically."
+    },
+    "assembly": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "multi-part assembly graph: how the parts[] mate and the clearance that drives every fit.",
+      "properties": {
+        "clearance_mm": {
+          "type": "number",
+          "minimum": 0,
+          "description": "ONE clearance that drives every mating fit (press ~0.1 / snug ~0.2 / sliding ~0.3-0.4)"
+        },
+        "mates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["a", "b", "type"],
+            "properties": {
+              "a": {"type": "string", "description": "part name"},
+              "b": {"type": "string", "description": "part name"},
+              "type": {"type": "string", "enum": ["fit", "snap", "slide", "hinge", "thread", "rest", "press"]},
+              "note": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
     "notes": {
       "type": "string"
     },

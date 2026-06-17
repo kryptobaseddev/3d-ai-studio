@@ -74,15 +74,20 @@ def restricted_globals() -> dict:
     return g
 
 
-def execute_in_process(code: str):
+def execute_in_process(code: str, params: dict | None = None):
     """Execute ``code`` with restricted globals and return the resulting Solid.
 
     The script must define ``build()`` returning a Solid, or assign ``result``.
     Runs in-process — use :func:`run_script_text` for hard isolation/timeouts.
+
+    ``params`` is injected as a ``P`` dict so a script can read named, tweakable
+    parameters (``P.get("hole_d", 4.5)``) instead of magic numbers — this is what
+    makes a model regenerable from ``design.json`` with one parameter changed.
     """
     from studio3d.dsl import Solid
 
     g = restricted_globals()
+    g["P"] = dict(params or {})
     compiled = compile(code, "<authored-model>", "exec")
     exec(compiled, g)  # noqa: S102 - intentional, sandboxed globals
 
@@ -117,9 +122,14 @@ _RUNNER_TEMPLATE = textwrap.dedent(
     except Exception:
         pass
     sys.path.insert(0, {harness!r})
+    import json as _json
     from studio3d.sandbox import execute_in_process
     code = open({code_path!r}, "r", encoding="utf-8").read()
-    solid = execute_in_process(code)
+    try:
+        _params = _json.load(open({params_path!r}, "r", encoding="utf-8"))
+    except Exception:
+        _params = {{}}
+    solid = execute_in_process(code, _params)
     # PLY preserves shared vertices (unlike STL's triangle soup), so watertight
     # topology survives the cross-process handoff.
     solid.mesh.export({out_path!r})
@@ -129,22 +139,27 @@ _RUNNER_TEMPLATE = textwrap.dedent(
 
 
 def run_script_text(code: str, timeout: float = 30.0, cpu_seconds: int = 25,
-                    mem_bytes: int | None = None):
+                    mem_bytes: int | None = None, params: dict | None = None):
     """Execute authored ``code`` in an isolated subprocess; return a Trimesh.
 
+    ``params`` is injected as a ``P`` dict for named, tweakable parameters.
     Raises ``RuntimeError`` on timeout, resource exhaustion, or script error.
     """
+    import json
     import trimesh
 
     harness_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     with tempfile.TemporaryDirectory(prefix="studio3d_") as td:
         code_path = os.path.join(td, "model.py")
         out_path = os.path.join(td, "model.ply")
+        params_path = os.path.join(td, "params.json")
         with open(code_path, "w", encoding="utf-8") as f:
             f.write(code)
+        with open(params_path, "w", encoding="utf-8") as f:
+            json.dump(params or {}, f)
         runner = _RUNNER_TEMPLATE.format(
             cpu=cpu_seconds, harness=harness_root,
-            code_path=code_path, out_path=out_path,
+            code_path=code_path, out_path=out_path, params_path=params_path,
         )
         # Inherit the parent env (so library/locale discovery works) but pin
         # thread pools to 1 (avoids OpenBLAS deadlocks under subprocess) and
