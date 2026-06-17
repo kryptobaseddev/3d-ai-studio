@@ -36,6 +36,12 @@ tool is *architecturally barred* from matching. See `docs/V3-COMPETE-WITH-MESHY.
   defects invisible in a 4-view image), with an anti-stagnation `escalate` verdict.
 - **Heal-the-generative-path.** Any generative mesh is forced through repair + a
   manifold round-trip toward a watertight solid before validation.
+- **Per-face AMS multicolor from one CSG union.** `paint()` each part and combine with
+  `multicolor_union(...)` → a single watertight solid whose 3MF carries per-triangle color
+  groups mapped to AMS filament slots (and a colored GLB). Meshy can't emit AMS-mapped color.
+- **Faceted STEP export** (`studio3d step`, or `--formats …,step`) — a dependency-free
+  AP214 `MANIFOLD_SOLID_BREP` that imports as a solid into Fusion/FreeCAD/SolidWorks/Onshape
+  (no OCP kernel needed on CPython 3.14).
 - **Assemblies.** Multi-part design plans with `mates`, a single `clearance_mm` knob,
   and an automated `interference()` collision check.
 - **DFAM/CSG domain knowledge base** (`studio3d kb`) grounds authoring in documented rules.
@@ -188,6 +194,8 @@ studio3d validate model.stl    # print-readiness report (D1–D4 + kernel metric
 studio3d validate model.3mf --slice   # validate WITH a real headless slice (D2 ground truth)
 studio3d slice model.3mf       # real slice-to-G-code: print time + filament grams
 studio3d orient model.stl --out reoriented.stl   # support-minimizing print pose (SEG)
+studio3d step model.stl        # faceted STEP (AP214) for CAD interchange (Fusion/FreeCAD/SolidWorks)
+studio3d gen-script --script owl.py --formats stl,3mf,glb,step   # include STEP in a bundle
 studio3d doctor                # env + blender + active profile
 studio3d examples              # list bundled example scripts
 

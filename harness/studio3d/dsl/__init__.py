@@ -58,6 +58,8 @@ __all__ = [
     "load_mesh",
     "interference",
     "arrange_on_bed",
+    "paint",
+    "multicolor_union",
     "deg",
     "PI",
 ]
@@ -88,14 +90,22 @@ class Solid:
         a & b   intersection
     """
 
-    __slots__ = ("mesh", "_name")
+    __slots__ = ("mesh", "_name", "_color")
 
-    def __init__(self, mesh: trimesh.Trimesh, name: str = "solid"):
+    def __init__(self, mesh: trimesh.Trimesh, name: str = "solid", color: str | None = None):
         if not isinstance(mesh, trimesh.Trimesh):
             raise TypeError("Solid wraps a trimesh.Trimesh")
         # always work on a copy so transforms never mutate a shared mesh
         self.mesh = mesh.copy()
         self._name = name
+        self._color = color
+
+    # ---- color (for per-part / AMS multicolor) -------------------------
+    def paint(self, color: str) -> "Solid":
+        """Tag this solid with a hex color (e.g. '#e23b3b'). Used by
+        :func:`multicolor_union` to assign per-face colors on a single union so
+        the 3MF carries AMS multicolor. Returns a new colored Solid."""
+        return Solid(self.mesh, self._name, color=color)
 
     # ---- introspection -------------------------------------------------
     @property
@@ -133,7 +143,7 @@ class Solid:
     def _xform(self, matrix: np.ndarray, name: str | None = None) -> "Solid":
         m = self.mesh.copy()
         m.apply_transform(matrix)
-        return Solid(m, name or self._name)
+        return Solid(m, name or self._name, color=self._color)
 
     def translate(self, x: float = 0, y: float = 0, z: float = 0) -> "Solid":
         return self._xform(tf.translation_matrix([x, y, z]))
@@ -572,6 +582,70 @@ def hull(*solids: Solid) -> Solid:
     meshes = [_as_mesh(s) for s in _flatten(solids)]
     combined = trimesh.util.concatenate(meshes)
     return Solid(combined.convex_hull, "hull")
+
+
+def paint(solid: Solid, color: str) -> Solid:
+    """Free-function form of :meth:`Solid.paint`."""
+    return solid.paint(color)
+
+
+def _hex_rgba(hex_color: str):
+    h = (hex_color or "#9aa7b2").strip().lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    if len(h) == 8:
+        h = h[:6]
+    if len(h) != 6:
+        h = "9aa7b2"
+    return [int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), 255]
+
+
+def multicolor_union(*parts: Solid, default: str = "#9aa7b2") -> Solid:
+    """Union painted parts into ONE watertight solid and assign per-FACE colors so
+    a single CSG body carries AMS multicolor (each face takes the color of the
+    painted part whose surface it lies on — nearest-surface assignment).
+
+    Usage:
+        body = ellipsoid(40,36,52).paint('#8d6e63')
+        eyes = (sphere(d=12).at(-8,16,34) + sphere(d=12).at(8,16,34)).paint('#ffffff')
+        beak = cone(h=8,d=7).rotate_x(90).at(0,20,30).paint('#e8a33b')
+        result = multicolor_union(body, eyes, beak)
+
+    Exporters then write a per-triangle-colored 3MF (AMS) + a colored GLB. The
+    geometry is a single, watertight, sliceable solid — not a loose part set."""
+    plist = _flatten(list(parts))
+    if not plist:
+        raise ValueError("multicolor_union needs at least one part")
+    meshes = [_as_mesh(p) for p in plist]
+    colors = [getattr(p, "_color", None) or default for p in plist]
+
+    union_mesh = trimesh.boolean.union(meshes)
+    union_mesh.merge_vertices()
+    trimesh.repair.fix_normals(union_mesh)
+
+    centroids = union_mesh.triangles_center  # (F,3)
+    # distance from each union face centroid to each part's surface; the part that
+    # contributed the face has ~0 distance there -> argmin picks the right color.
+    best = np.full(len(centroids), 0, dtype=int)
+    best_d = np.full(len(centroids), np.inf)
+    for idx, m in enumerate(meshes):
+        try:
+            d = np.abs(trimesh.proximity.signed_distance(m, centroids))
+        except Exception:
+            # fallback: nearest-point distance
+            _, d, _ = trimesh.proximity.closest_point(m, centroids)
+            d = np.abs(d)
+        closer = d < best_d
+        best[closer] = idx
+        best_d[closer] = d[closer]
+
+    palette = [_hex_rgba(c) for c in colors]
+    face_colors = np.array([palette[i] for i in best], dtype=np.uint8)
+    union_mesh.visual = trimesh.visual.ColorVisuals(union_mesh, face_colors=face_colors)
+    s = Solid(union_mesh, "multicolor")
+    # carry the first color as the solid's nominal color
+    s._color = colors[0]
+    return s
 
 
 def linear_pattern(solid: Solid, count: int, dx: float = 0, dy: float = 0, dz: float = 0) -> list[Solid]:

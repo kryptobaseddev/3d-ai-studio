@@ -72,8 +72,9 @@ export default function App() {
           {selected && (
             <div className="downloads">
               {selected.files.stl && <a href={asset(`output/${selected.id}/${selected.files.stl}`)} download>STL</a>}
-              {selected.files["3mf"] && <a href={asset(`output/${selected.id}/${selected.files["3mf"]}`)} download>3MF</a>}
+              {selected.files["3mf"] && <a href={asset(`output/${selected.id}/${selected.files["3mf"]}`)} download>{selected.multicolor ? "3MF (AMS)" : "3MF"}</a>}
               {selected.files.glb && <a href={asset(`output/${selected.id}/${selected.files.glb}`)} download>GLB</a>}
+              {selected.files.step && <a href={asset(`output/${selected.id}/${selected.files.step}`)} download>STEP</a>}
             </div>
           )}
         </header>

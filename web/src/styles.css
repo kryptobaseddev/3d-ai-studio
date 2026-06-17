@@ -107,3 +107,5 @@ body { background: var(--bg); color: var(--text); }
 .src-actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
 .src-actions a { color: #58a6ff; font-size: 12px; }
 .source { background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 11px; max-height: 240px; overflow: auto; margin-top: 8px; color: #c9d1d9; }
+.palette { display: flex; gap: 6px; margin: 6px 0 4px; }
+.palette .swatch { width: 20px; height: 20px; border-radius: 5px; border: 1px solid var(--border); }

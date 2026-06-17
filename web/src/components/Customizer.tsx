@@ -64,7 +64,15 @@ export function Customizer({ model, rev }: { model: ManifestEntry | null; rev: n
 
   return (
     <section className="customizer">
-      <h3>Customizer {model.editable && <span className="badge real">editable</span>}</h3>
+      <h3>Customizer {model.editable && <span className="badge real">editable</span>}
+        {model.multicolor && <span className="badge real">AMS multicolor</span>}</h3>
+      {model.multicolor && model.palette && model.palette.length > 1 && (
+        <div className="palette" title="per-face AMS colors on a single CSG union">
+          {model.palette.map((c) => (
+            <span key={c} className="swatch" style={{ background: c }} title={c} />
+          ))}
+        </div>
+      )}
       {keys.length === 0 && <p className="muted">No named parameters — author with <code>P.get(...)</code> to expose knobs.</p>}
       <div className="knobs">
         {keys.map((k) => (
