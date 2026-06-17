@@ -56,9 +56,7 @@ def export_3mf(mesh: trimesh.Trimesh, path: str, color: str | None = "#9aa7b2",
     t_lines = "".join(
         f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in faces
     )
-    col = (color or "#9aa7b2").upper()
-    if len(col) == 7:
-        col = col + "FF"  # add alpha
+    col = "#" + _norm_hex(color).upper() + "FF"  # #RRGGBBFF
 
     model_xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -114,9 +112,7 @@ def export_3mf_multi(parts: "list[tuple]", path: str, name: str = "assembly") ->
         faces = np.asarray(mesh.faces, dtype=int)
         v_lines = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>' for x, y, z in verts)
         t_lines = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in faces)
-        col = (color or "#9aa7b2").upper()
-        if len(col) == 7:
-            col += "FF"
+        col = "#" + _norm_hex(color).upper() + "FF"
         resources.append(f'    <m:colorgroup id="{cg_id}"><m:color color="{col}"/></m:colorgroup>')
         resources.append(
             f'    <object id="{obj_id}" type="model" pid="{cg_id}" pindex="0">'
@@ -335,10 +331,21 @@ def write_manifest(output_root: str) -> str:
 # helpers
 # ======================================================================
 
+def _norm_hex(hex_color: str) -> str:
+    """Normalize a hex color to 6-digit RRGGBB (no #). Accepts #rgb, #rrggbb,
+    #rrggbbaa (alpha dropped), with or without '#'. Falls back to a neutral gray."""
+    h = (hex_color or "#9aa7b2").strip().lstrip("#")
+    if len(h) == 3:                       # #abc -> aabbcc
+        h = "".join(c * 2 for c in h)
+    if len(h) == 8:                       # rrggbbaa -> rrggbb
+        h = h[:6]
+    if len(h) != 6 or any(c not in "0123456789abcdefABCDEF" for c in h):
+        h = "9aa7b2"
+    return h.lower()
+
+
 def _hex_to_rgba(hex_color: str) -> list[int]:
-    h = (hex_color or "#9aa7b2").lstrip("#")
-    if len(h) == 6:
-        h += "ff"
+    h = _norm_hex(hex_color) + "ff"
     return [int(h[i:i + 2], 16) for i in (0, 2, 4, 6)]
 
 

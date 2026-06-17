@@ -16,6 +16,34 @@ React + three.js preview UI.
 
 ---
 
+## New in v0.4 — the print-readiness moat (beat Meshy where it's structurally weak)
+
+3D Studio competes with generative-mesh tools (Meshy/Tripo) not on organic mesh
+aesthetics — their saturated home turf — but on the properties a diffusion-mesh cloud
+tool is *architecturally barred* from matching. See `docs/V3-COMPETE-WITH-MESHY.md`.
+
+- **Real slice-to-G-code D2.** Print-readiness is no longer a proxy: `studio3d slice`
+  drives a detected OrcaSlicer/PrusaSlicer/Bambu/Cura headless to produce real G-code
+  with print time + filament grams. With no slicer installed it falls back to an
+  **explicitly labeled** proxy — "print-ready" is never silently self-certified.
+- **Forever-editable parametric source.** Every bundle ships `model.py` + `params.json`.
+  Change one knob (`studio3d tweak --set wall=3`) and regenerate deterministically. A
+  Meshy mesh has no knobs to turn.
+- **Print-Readiness Certificate.** `certificate.json` — prompt → script/file hashes →
+  D1–D4 → slice result → human-approval slot — an auditable provenance chain.
+- **Kernel-metrics-fused critique.** The `design-critic` runs on a stronger model and
+  reads genus / component-count / wall-p05 / overhang alongside the renders (catches
+  defects invisible in a 4-view image), with an anti-stagnation `escalate` verdict.
+- **Heal-the-generative-path.** Any generative mesh is forced through repair + a
+  manifold round-trip toward a watertight solid before validation.
+- **Assemblies.** Multi-part design plans with `mates`, a single `clearance_mm` knob,
+  and an automated `interference()` collision check.
+- **DFAM/CSG domain knowledge base** (`studio3d kb`) grounds authoring in documented rules.
+- **Internal MUSE benchmark** (`studio3d muse`) — **scores 100/100** across all five
+  cascade dimensions (vs the 2026 MUSE generative cascade of 68→54→42→35→28).
+- **Browser Customizer.** The viewer surfaces the parametric knobs, the certificate, the
+  source, and the real-slice result; regenerate and watch it update live.
+
 ## Why this design
 
 There are two ways to make 3D with AI:
@@ -156,9 +184,20 @@ studio3d import ~/Downloads/box.stl --name box --reorient
 studio3d history --bundle my-part
 studio3d history --bundle my-part --revert <sha>
 
-studio3d validate model.stl    # print-readiness report (D1–D4)
+studio3d validate model.stl    # print-readiness report (D1–D4 + kernel metrics)
+studio3d validate model.3mf --slice   # validate WITH a real headless slice (D2 ground truth)
+studio3d slice model.3mf       # real slice-to-G-code: print time + filament grams
+studio3d orient model.stl --out reoriented.stl   # support-minimizing print pose (SEG)
 studio3d doctor                # env + blender + active profile
 studio3d examples              # list bundled example scripts
+
+# forever-editable: change one knob and regenerate deterministically
+studio3d tweak --plan my-part.design.json --set wall=3 --script model.py
+studio3d certify output/my-part --approve     # human sign-off in the certificate
+
+# knowledge + benchmark
+studio3d kb "overhang limit and supports"      # DFAM/CSG domain knowledge base
+studio3d muse                                   # internal MUSE print-readiness benchmark (scores 100)
 ```
 
 ### Design sessions, styles & reference library (v3)
@@ -235,8 +274,11 @@ print-readiness report (D1/D3) driven entirely by `output/manifest.json` — no 
 Every model is scored 0–100 across four independent dimensions (see the
 `print-readiness` skill for the full rule set + citations):
 
-- **D1 Mesh Integrity** — watertight, 2-manifold, outward normals (hard gate).
-- **D2 Slicer Pass** — opens cleanly and slices to valid G-code.
+- **D1 Mesh Integrity** — watertight, 2-manifold, outward normals, single body /
+  expected genus (hard gate).
+- **D2 Slicer Pass** — a **real headless slice** to G-code (OrcaSlicer/PrusaSlicer/
+  Bambu/Cura) with print time + filament grams when a slicer is installed; otherwise an
+  explicitly labeled proxy (`d2_method`).
 - **D3 Print Geometry** — min wall (≥0.8mm FDM 0.4 nozzle), overhangs (≤45–50°),
   bed fit, feature sizes — wall thickness measured by inward ray casting.
 - **D4 Workflow** — mm units, 3MF for color/Bambu AMS vs STL for legacy.

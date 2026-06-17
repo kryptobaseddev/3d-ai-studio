@@ -3,6 +3,7 @@ import { Scene } from "./components/Scene";
 import { ModelViewer } from "./components/ModelViewer";
 import { Gallery } from "./components/Gallery";
 import { ReportPanel } from "./components/ReportPanel";
+import { Customizer } from "./components/Customizer";
 import type { Manifest, ManifestEntry, Report } from "./types";
 import { asset } from "./types";
 
@@ -86,6 +87,7 @@ export default function App() {
           )}
         </div>
         {selected && <p className="prompt">“{selected.prompt}”</p>}
+        <Customizer model={selected} rev={rev} />
       </main>
 
       <ReportPanel report={report} />

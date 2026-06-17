@@ -55,7 +55,7 @@ The trimesh + manifold3d CSG path is the deliberate, verified choice.
 
 ## Run things
 ```bash
-PYTHONPATH=harness ./.venv/bin/python -m pytest tests -q     # tests (43)
+PYTHONPATH=harness ./.venv/bin/python -m pytest tests -q     # tests (64)
 ./bin/studio3d doctor                                         # env + blender + profile
 ./bin/studio3d gen-script --script examples/cable_clip.py --name clip --out output
 ./bin/studio3d render output/clip/model.stl                   # multi-view (visual loop)
@@ -67,8 +67,18 @@ cd web && npm install && npm run dev                          # live viewer (por
 ```
 
 ## CLI commands
-`gen` · `gen-script` · `run-script` · `validate` · `render` · `manifest` ·
+`gen` · `gen-script` (`--params`/`--no-slice`) · `run-script` · `validate` (`--slice`) ·
+`slice` · `tweak` · `orient` · `certify` · `kb` · `muse` · `render` · `manifest` ·
 `printers` · `profile {list,show,use,add}` · `import` · `history` · `examples` · `doctor`
+
+## v0.4 modules (the "beat Meshy" moat — see docs/V3-COMPETE-WITH-MESHY.md)
+- `slicer.py` — real headless slice-to-G-code for D2 (Orca/Prusa/Bambu/Cura); labeled proxy fallback.
+- `certify.py` — Print-Readiness Certificate (prompt→script/file hashes→D1-D4→slice→human approval).
+- `kb.py` + `data/kb/` — offline BM25 DFAM/CSG domain-RAG over bundled rules + registry skills.
+- `muse.py` — internal MUSE benchmark (5 cascade dims); `studio3d muse` scores 100.
+- `validate.heal()` (generative path), `validate.orient_for_print()` (SEG), `metrics.kernel_metrics`.
+- `dsl.interference()` / `dsl.arrange_on_bed()` — assemblies. `P` dict = named params (sandbox).
+- exporters ship `model.py`+`params.json` per bundle; `export_3mf_multi` = per-part AMS colorgroups.
 
 ## The fidelity loop (how 99% intent-match is reached)
 Generate → `studio3d render` → **Read the view PNGs** → score on the intent rubric

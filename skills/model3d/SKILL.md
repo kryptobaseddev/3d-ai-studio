@@ -60,15 +60,28 @@ studio3d styles <style>                        # head_body_ratio, eye_size_mult,
 ```
 Or `studio3d plan brief <design.json>` to get the brief straight from the plan.
 
-## 2. Author the geometry (CSG) — BY PROPORTION
-Write a script in the **studio3d DSL** (see the **cad-authoring** skill for the full
-API: box, cylinder, sphere, ellipsoid, cone, prism, tube, slot, teardrop, extrude,
-revolve, twist_extrude, loft, hull, text + booleans + transforms). For organic/figure
-models, **author by proportion**: define a head-unit **H** from the reference recipe
-and place/size every part as a multiple of H (per the brief's numeric ratios and
-`eye_rule`) — **not** ad-hoc mm. Apply the **print-readiness** rules while modeling
-(mm, ≥0.8mm walls, ≥45° overhangs, base chamfers, teardrop horizontal holes, mating
-clearance). Delegate complex parts to the **cad-author** subagent. End with `.on_bed()`.
+## 2. Author the geometry (CSG) — BY PROPORTION, with NAMED PARAMETERS
+First **ground in the knowledge base**: `studio3d kb "<what you're building>"` returns
+the DFAM numerics + the proven CSG recipe (e.g. "wall bracket gusset", "vessel inner
+bore wall", "teardrop horizontal hole"). Then write a script in the **studio3d DSL**
+(see the **cad-authoring** skill for the full API: box, cylinder, sphere, ellipsoid,
+cone, prism, tube, slot, teardrop, extrude, revolve, twist_extrude, loft, hull, text,
+**interference**, **arrange_on_bed** + booleans + transforms).
+
+**Parameterize every key dimension** by reading it from the injected `P` dict with a
+default — `wall = P.get("wall", 2.0)` — NOT magic numbers. The bundle ships `model.py`
++ `params.json`, so the model is **forever-editable** (`studio3d tweak --set wall=3`
+regenerates it deterministically). A hardcoded dimension is a defect.
+
+For organic/figure models, **author by proportion**: define a head-unit **H** from the
+reference recipe and place/size every part as a multiple of H (per the brief's numeric
+ratios and `eye_rule`) — **not** ad-hoc mm. Apply the **print-readiness** rules while
+modeling (mm, ≥0.8mm walls, ≥45° overhangs, base chamfers, teardrop horizontal holes,
+mating clearance). Delegate complex parts to the **cad-author** subagent. End with `.on_bed()`.
+
+For **multi-part assemblies**, build each part, lay them out with `arrange_on_bed([...])`,
+and assert no collision with `interference(a, b) == 0` before returning — then capture the
+mates + one `clearance_mm` knob in the design plan's `assembly` block.
 
 ## 3. THE FIDELITY LOOP — fabricate, look, critique, revise (≤4 passes)
 This is how the result actually matches the request. **Do not ship a model you have
@@ -97,15 +110,22 @@ Score each criterion **0–100** against that ground truth:
 | **Feature** | Is every reference cue present + identifiable (eyes, beak, ear tufts…)? |
 | **Style** | Does it match the style params (head_body_ratio, eye_size_mult, facet_level)? |
 
-Also require **print-readiness** (`print_ready: true`, no blocking D1/D3). **Revise**
-the script for any low score and regenerate (same `--plan`/`--name` → overwrites in
-place, git captures the change). **Stop** when all four are ≥ ~95 AND `print_ready` is
-true, **or** after 4 passes keeping the **best-so-far** (never ship a pass that scored
-lower than a previous one). If you plateau below target, say so and explain the
-limitation honestly rather than claiming success.
+Also **read the kernel metrics** in `report.json` → `metrics.kernel_metrics` (or the
+`summary.kernel_metrics` from gen-script): `n_components` must be **1** for a single
+part (2+ = a floating/disconnected piece a render can hide), `genus` as expected, and
+`wall_p05_mm` ≥ the minimum. Vision alone is contextually blind — fuse it with these
+numbers. Require **print-readiness** (`print_ready: true`, no blocking D1/D3).
 
-For a fresh, frame-isolated judgement, delegate scoring to the **design-critic**
-subagent (it renders + critiques blind and returns a rubric score + fixes).
+**Revise** the script for any low score and regenerate (same `--plan`/`--name` →
+overwrites in place, git captures the change). **Stop** when all axes are ≥ ~95 AND
+`print_ready` is true, **or** after 4 passes keeping the **best-so-far**. If the SAME
+issue persists across two passes, do NOT repeat the fix — **escalate**: switch to a
+fundamentally different construction (decompose into sub-parts, hull/loft for blobby
+forms, change the proportion anchor).
+
+For a fresh, frame-isolated, STRONGER judgement, delegate scoring to the **design-critic**
+subagent (it runs on a strong model, renders + critiques blind, fuses the kernel metrics,
+and returns a rubric score + fixes, with a `ship`/`revise`/`escalate`/`reject` verdict).
 
 ## 4. Tweak / modify / iterate
 The user will refine ("make it taller", "add a lid", "round the corners"). When the
@@ -128,8 +148,20 @@ through `gen-script` — the fidelity loop applies the same way.
 ## 6. Present + live preview
 Report what was built, the intent-match and print-readiness scores, the bundle path,
 the recommended slicer format (3MF for Bambu/AMS color, STL otherwise), key metrics
-(mm, mass), and print advice (supports/orientation). The user can watch every change
-**live** in the viewer:
+(mm, mass), and print advice (supports/orientation). Mention that the bundle ships an
+**auditable Print-Readiness Certificate** (`certificate.json`: prompt → script hash →
+D1–D4 → slice → human approval) and **editable source** (`model.py` + `params.json`).
+
+Real extras the user can run:
+- `studio3d slice <bundle>/model.3mf` — REAL slice-to-G-code (D2 ground truth): print
+  time + filament grams (needs a slicer installed; otherwise D2 is the labeled proxy).
+- `studio3d orient <bundle>/model.stl --out reoriented.stl` — support-minimizing pose.
+- `studio3d tweak --plan <slug>.design.json --set <k>=<v> --script model.py` — change one
+  knob and regenerate deterministically.
+- `studio3d certify <bundle> --approve` — record human sign-off in the certificate.
+
+The user can watch every change **live** in the viewer (3D view, print-readiness report,
+and a parametric **Customizer** that surfaces the knobs):
 ```bash
 cd web && npm install && npm run dev    # http://localhost:5173 — auto-refreshes
 ```

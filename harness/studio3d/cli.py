@@ -319,6 +319,47 @@ def cmd_muse(args) -> int:
     return _emit(res)
 
 
+def cmd_orient(args) -> int:
+    """Find the support-minimizing print orientation (SEG) and optionally write the
+    reoriented mesh. Slicer-aware placement: fewer supports == less waste/cleanup."""
+    import trimesh
+    from .validate import orient_for_print
+    from trimesh import transformations as tf
+    import math
+    try:
+        mesh = trimesh.load(args.mesh, force="mesh")
+        if isinstance(mesh, trimesh.Scene):
+            mesh = trimesh.util.concatenate([g for g in mesh.geometry.values()])
+        res = orient_for_print(mesh, limit_deg=args.overhang)
+        best = res["best"]
+        if args.out:
+            m = mesh.copy()
+            if best["axis"] is not None:
+                m.apply_transform(tf.rotation_matrix(math.radians(best["deg"]), best["axis"], m.centroid))
+            m.apply_translation([0, 0, -float(m.bounds[0][2])])
+            m.export(args.out)
+            res["written"] = args.out
+    except Exception as e:
+        return _emit({"error": f"{type(e).__name__}: {e}"}, ok=False)
+    return _emit(res)
+
+
+def cmd_certify(args) -> int:
+    """Sign off a Print-Readiness Certificate (human approval, audit trail)."""
+    cert_path = os.path.join(args.bundle, "certificate.json")
+    if not os.path.exists(cert_path):
+        return _emit({"error": f"no certificate.json in {args.bundle}"}, ok=False)
+    with open(cert_path) as f:
+        cert = json.load(f)
+    cert["human_approved"] = bool(args.approve)
+    if args.note:
+        cert["human_note"] = args.note
+    with open(cert_path, "w") as f:
+        json.dump(cert, f, indent=2)
+    return _emit({"certificate": cert_path, "human_approved": cert["human_approved"],
+                  "print_ready": cert.get("print_ready"), "score": cert.get("score")})
+
+
 def cmd_manifest(args) -> int:
     from . import exporters
     path = exporters.write_manifest(args.out)
@@ -621,6 +662,18 @@ def build_parser() -> argparse.ArgumentParser:
     mu.add_argument("--full", action="store_true", help="include per-case dimension detail")
     mu.add_argument("--timeout", type=float, default=60.0)
     mu.set_defaults(func=cmd_muse)
+
+    orp = sub.add_parser("orient", help="find the support-minimizing print orientation (SEG)")
+    orp.add_argument("mesh", help="path to STL/3MF/GLB/OBJ/PLY")
+    orp.add_argument("--out", help="write the reoriented mesh here")
+    orp.add_argument("--overhang", type=float, default=50.0, help="overhang limit deg from vertical")
+    orp.set_defaults(func=cmd_orient)
+
+    cf = sub.add_parser("certify", help="human sign-off on a bundle's Print-Readiness Certificate")
+    cf.add_argument("bundle", help="bundle dir containing certificate.json")
+    cf.add_argument("--approve", action="store_true", help="mark human_approved=true")
+    cf.add_argument("--note", help="reviewer note")
+    cf.set_defaults(func=cmd_certify)
 
     m = sub.add_parser("manifest", help="(re)build output/manifest.json")
     m.add_argument("--out", default="output")
