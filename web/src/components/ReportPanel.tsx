@@ -14,9 +14,12 @@ export function ReportPanel({ report }: { report: Report | null }) {
   if (!report) return <aside className="report empty">Select a model to see its print-readiness report.</aside>;
 
   const d1 = report.dimensions.D1_mesh_integrity;
+  const d2 = report.dimensions.D2_slicer_pass;
   const d3 = report.dimensions.D3_print_geometry;
   const wall = report.metrics.wall_thickness;
+  const km = report.metrics.kernel_metrics;
   const verdict = report.print_ready ? "PRINT-READY" : "NEEDS WORK";
+  const d2real = d2.method === "slice";
 
   return (
     <aside className="report">
@@ -30,9 +33,19 @@ export function ReportPanel({ report }: { report: Report | null }) {
       <Row label="Consistent normals (outward)" ok={d1.winding_consistent} />
       <Row label="Valid manifold volume" ok={d1.is_volume} />
       <Row label={`Non-manifold edges: ${d1.non_manifold_edges}`} ok={d1.non_manifold_edges === 0} />
+      {km && (
+        <Row label={`${km.n_components} part${km.n_components === 1 ? "" : "s"} · genus ${km.genus}`}
+             ok={km.n_components === 1 && (km.genus ?? 0) >= 0} />
+      )}
 
-      <h3>D2 · Slicer Pass</h3>
-      <Row label="Opens cleanly in Bambu / Prusa / Orca" ok={report.dimensions.D2_slicer_pass.pass} />
+      <h3>D2 · Slicer Pass {d2real ? <span className="badge real">real slice</span> : <span className="badge proxy">proxy</span>}</h3>
+      <Row label={d2real ? `Sliced to G-code via ${d2.slicer}` : "Opens cleanly (proxy — install a slicer for a real slice)"} ok={d2.pass} />
+      {d2real && (d2.print_time || d2.filament_g != null) && (
+        <p className="metric">
+          {d2.print_time ? `⏱ ${d2.print_time}` : ""}{d2.print_time && d2.filament_g != null ? " · " : ""}
+          {d2.filament_g != null ? `${d2.filament_g} g filament` : ""}
+        </p>
+      )}
 
       <h3>D3 · Print Geometry</h3>
       <Row label={`Fits build volume (${(d3.bed_mm || []).join("×")}mm)`} ok={d3.bed_fit} />

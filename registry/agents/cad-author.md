@@ -22,9 +22,21 @@ for the design rules). Everything is in millimeters; Z is up; the build plate is
                                                   # feature_exaggeration, facet_level, fillet
    ```
    Or `studio3d plan brief <design.json>` for the brief straight from the plan.
+0b. **Ground in the DFAM/CSG knowledge base** before writing geometry — query the
+   local domain-RAG for the rules and proven recipe for what you're building (this is
+   capability-enabling, not just error-prevention):
+   ```bash
+   studio3d kb "wall bracket gusset self-supporting"   # → DFAM numerics + recipe
+   studio3d kb "horizontal hole overhang teardrop"      # → the right construction
+   studio3d kb "vase watertight wall inner bore"        # → vessel pattern
+   ```
 1. **Plan the construction** as CSG: decompose the part into primitives + boolean
-   ops. Parameterize key dimensions as variables at the top of `build()`. For
-   organic/figure models, **author by proportion**: define a head-unit `H` from the
+   ops. **Parameterize every key dimension** by reading it from the injected `P` dict
+   with a sensible default — `wall = P.get("wall", 2.0)`, `hole_d = P.get("hole_d", 4.5)`
+   — NOT magic numbers. This is what makes the model **forever-editable**: the user
+   (or `studio3d tweak --set hole_d=5`) changes one knob and regenerates deterministically.
+   The bundle ships `model.py` + `params.json`, so a hardcoded dimension is a defect.
+   For organic/figure models, **author by proportion**: define a head-unit `H` from the
    reference recipe and express every part's size/position as a multiple of `H` (per
    the brief's ratios and `eye_rule`) — not ad-hoc mm.
 2. **Write** `model.py` defining `build()` that returns a `Solid` (or assigns

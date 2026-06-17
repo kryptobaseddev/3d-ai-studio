@@ -1,17 +1,38 @@
 // Shapes that mirror what the studio3d harness writes into output/.
 
+export interface KernelMetrics {
+  watertight?: boolean;
+  manifold?: boolean;
+  genus?: number;
+  n_components?: number;
+  volume_mm3?: number;
+  triangles?: number;
+  wall_p05_mm?: number | null;
+  min_wall_required_mm?: number;
+  steepest_overhang_deg?: number;
+  overhang_needs_support?: boolean;
+  bed_fit?: boolean;
+}
+
 export interface ManifestEntry {
   id: string;
   name: string;
   prompt: string;
   category?: string;
   printer_profile?: string;
-  files: { stl?: string; "3mf"?: string; glb?: string; thumb?: string };
+  files: {
+    stl?: string; "3mf"?: string; glb?: string; thumb?: string;
+    source?: string; params?: string; plan?: string; certificate?: string;
+  };
+  editable?: boolean;
+  parameters?: Record<string, number | string | boolean>;
   print_ready?: boolean;
   score?: number;
   bbox_mm?: [number, number, number];
   bed_mm?: [number, number, number];
   est_mass_g?: number;
+  kernel_metrics?: KernelMetrics;
+  slice?: { pass?: boolean; method?: string; slicer?: string; print_time?: string; filament_g?: number };
   color?: string;
 }
 
@@ -35,7 +56,10 @@ export interface Report {
       self_intersections: number | null;
       euler_number: number;
     };
-    D2_slicer_pass: { pass: boolean; rationale: string };
+    D2_slicer_pass: {
+      pass: boolean; rationale: string; method?: string; slicer?: string;
+      print_time?: string; filament_g?: number; error?: string; slice_note?: string;
+    };
     D3_print_geometry: {
       pass: boolean;
       min_wall_required_mm: number;
@@ -52,6 +76,7 @@ export interface Report {
     triangles?: number;
     est_mass_g_solid?: number;
     wall_thickness?: { available: boolean; min?: number; p05?: number; median?: number };
+    kernel_metrics?: KernelMetrics;
   };
   issues: string[];
   warnings: string[];

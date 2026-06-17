@@ -44,14 +44,23 @@ def generate(spec, timeout: float = 300.0) -> tuple[trimesh.Trimesh, dict]:
     backend = select_backend()
     if backend == "meshy":
         try:
-            return _generate_meshy(spec, timeout=timeout)
+            mesh, info = _generate_meshy(spec, timeout=timeout)
         except Exception as e:
             # never hard-fail the pipeline — fall back to mock with a note
             mesh, info = _generate_mock(spec)
             info["meshy_error"] = f"{type(e).__name__}: {e}"
             info["fell_back"] = True
-            return mesh, info
-    return _generate_mock(spec)
+    else:
+        mesh, info = _generate_mock(spec)
+    # ALWAYS heal generative output toward a watertight 2-manifold solid. No
+    # generative model is print-ready by default (it ships triangle soup); this
+    # is the mandatory gate that makes the hybrid path deliver a buildable part.
+    try:
+        from .validate import heal
+        info["heal"] = heal(mesh)
+    except Exception as e:
+        info["heal_error"] = f"{type(e).__name__}: {e}"
+    return mesh, info
 
 
 # ----------------------------------------------------------------------

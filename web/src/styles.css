@@ -89,3 +89,21 @@ body { background: var(--bg); color: var(--text); }
   .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
   .gallery { max-height: 22vh; }
 }
+
+/* --- v3: real-slice badge + parametric customizer --- */
+.badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; vertical-align: middle; margin-left: 6px; letter-spacing: 0.03em; }
+.badge.real { background: rgba(54, 196, 106, 0.18); color: var(--ok); }
+.badge.proxy { background: rgba(240, 169, 43, 0.18); color: var(--warn); }
+.customizer { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+.customizer h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: 0.03em; }
+.customizer .muted { color: var(--muted); font-size: 12px; }
+.customizer code { font-size: 11px; }
+.knobs { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.knob { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--muted); }
+.knob input[type="number"], .knob input[type="text"] { width: 84px; background: #0d1117; color: #e6edf3; border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+.regen { margin-top: 10px; }
+.cmd { display: block; background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-family: ui-monospace, monospace; white-space: pre-wrap; word-break: break-all; color: #9ece6a; margin: 6px 0; }
+.customizer button { background: #1f6feb; color: #fff; border: 0; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+.src-actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.src-actions a { color: #58a6ff; font-size: 12px; }
+.source { background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 11px; max-height: 240px; overflow: auto; margin-top: 8px; color: #c9d1d9; }

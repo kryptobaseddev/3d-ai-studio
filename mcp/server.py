@@ -104,6 +104,10 @@ TOOLS = [
     {"name": "studio3d_reference", "description": "Packaged design reference for a subject (silhouette cues, head-unit-H proportions, CSG recipe) merged with a style — author organic/figurative models by proportion from this.", "inputSchema": {"type": "object", "properties": {"subject": {"type": "string"}, "style": {"type": "string"}}, "required": ["subject"]}},
     {"name": "studio3d_styles", "description": "List artistic styles or show one style's numeric geometry params (head:body ratio, eye-size multiplier, facet level…).", "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}}}},
     {"name": "studio3d_subjects", "description": "List the subjects the reference library covers.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "studio3d_kb", "description": "Query the local DFAM/CSG domain knowledge base (design-for-printing numerics, CSG error→fix pairs, proven recipes) before authoring geometry — grounds the model in documented rules.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "k": {"type": "integer"}}, "required": ["query"]}},
+    {"name": "studio3d_build", "description": "Run the full local CSG pipeline from a DSL script: sandbox-execute → validate (D1-D4, real slice if a slicer is installed) → export STL/3MF/GLB + parametric source + Print-Readiness Certificate into output/<slug>/. Returns the bundle path, print_ready, score and kernel metrics.", "inputSchema": {"type": "object", "properties": {"script": {"type": "string", "description": "studio3d DSL source defining build() or result"}, "name": {"type": "string"}, "prompt": {"type": "string"}, "category": {"type": "string"}, "color": {"type": "string"}, "out": {"type": "string"}}, "required": ["script", "name"]}},
+    {"name": "studio3d_validate", "description": "Validate an existing mesh file against the 4-dimension print-readiness benchmark (D1 integrity, D2 slicer, D3 geometry, D4 workflow) + kernel metrics. Pass do_slice to run a real headless slice.", "inputSchema": {"type": "object", "properties": {"mesh": {"type": "string"}, "do_slice": {"type": "boolean"}}, "required": ["mesh"]}},
+    {"name": "studio3d_muse", "description": "Run the internal MUSE-style print-readiness benchmark and return the score across the 5 cascade dimensions (syntax/geometry/functionality/manufacturability/assemblability).", "inputSchema": {"type": "object", "properties": {}}},
 ]
 
 
@@ -125,6 +129,25 @@ def call_tool(name: str, args: dict) -> str:
         return _studio3d("styles", *( [args["name"]] if args.get("name") else [] ))
     if name == "studio3d_subjects":
         return _studio3d("reference")
+    if name == "studio3d_kb":
+        return _studio3d("kb", args["query"], "-k", str(args.get("k", 4)))
+    if name == "studio3d_build":
+        a = ["gen-script", "--code", args["script"], "--name", args["name"]]
+        if args.get("prompt"):
+            a += ["--prompt", args["prompt"]]
+        if args.get("category"):
+            a += ["--category", args["category"]]
+        if args.get("color"):
+            a += ["--color", args["color"]]
+        a += ["--out", args.get("out", "output")]
+        return _studio3d(*a)
+    if name == "studio3d_validate":
+        a = ["validate", args["mesh"]]
+        if args.get("do_slice"):
+            a += ["--slice"]
+        return _studio3d(*a)
+    if name == "studio3d_muse":
+        return _studio3d("muse")
     raise ValueError(f"unknown tool {name!r}")
 
 
@@ -177,14 +200,16 @@ def main():
                 respond(rid, {
                     "protocolVersion": PROTOCOL,
                     "capabilities": {"tools": {}, "resources": {}},
-                    "serverInfo": {"name": "3d-studio-registry", "version": "0.3.0"},
+                    "serverInfo": {"name": "3d-studio-registry", "version": "0.4.0"},
                     "instructions": (
-                        "3d-studio on-demand registry. The /model3d and /grill-me skills are native; "
+                        "3d-studio on-demand registry + pipeline. The /model3d and /grill-me skills are native; "
                         "everything else loads here to keep always-on cost ~0. Pull capabilities just-in-time: "
                         "list_skills/load_skill for reference knowledge (print-readiness rules, cad-authoring DSL "
                         "guide, 3d-modeling foundations, printer-setup); list_agents/load_agent to get a specialist's "
                         "system prompt, then spawn it with your Task/Agent tool. studio3d_reference/styles/subjects "
-                        "give the packaged design grounding for authoring by proportion."
+                        "give the packaged design grounding for authoring by proportion. studio3d_kb grounds the "
+                        "author in DFAM/CSG rules; studio3d_build runs the full local CSG pipeline (build→validate→"
+                        "real-slice→export+certificate); studio3d_validate checks any mesh; studio3d_muse benchmarks."
                     ),
                 })
             elif method in ("notifications/initialized", "initialized"):
