@@ -100,10 +100,25 @@ def _fabricate(spec, output_root: str, timeout: float = 60.0, do_slice: bool = T
     if prof:
         provenance["printer"] = f"{prof.make} {prof.model}"
         _eprint(f"[studio3d] targeting active profile: {prof.name} ({prof.make} {prof.model}, bed {bed}mm)")
+    # how many separate bodies SHOULD this be? 1 for a single part; the part count
+    # for a declared assembly. >this means detached/levitating fragments (a defect).
+    expected_components = 1
+    plan = getattr(spec, "_plan", None)
+    if plan is not None:
+        parts = plan.data.get("parts") or []
+        asm = plan.data.get("assembly") or {}
+        if asm.get("mates") or len(parts) > 1:
+            expected_components = max(1, len(parts))
+    if isinstance(getattr(spec, "parameters", None), dict) and spec.parameters.get("_expected_components"):
+        expected_components = int(spec.parameters["_expected_components"])
+
     _eprint("[studio3d] validating print-readiness…")
     report = validate(mesh, printer_profile=spec.printer_profile,
                       material=spec.material, multicolor=spec.multicolor, bed_mm=bed,
-                      do_slice=do_slice)
+                      do_slice=do_slice, expected_components=expected_components)
+    if not report.dimensions["D1_mesh_integrity"].get("single_connected", True):
+        _eprint(f"[studio3d] WARNING: {report.dimensions['D1_mesh_integrity']['n_components']} "
+                f"disconnected pieces (expected {expected_components}) — NOT print-ready")
     d2m = report.dimensions.get("D2_slicer_pass", {}).get("method")
     if d2m == "slice":
         _eprint(f"[studio3d] D2 real slice via {report.dimensions['D2_slicer_pass'].get('slicer')}: "
@@ -247,7 +262,8 @@ def cmd_validate(args) -> int:
             mesh = trimesh.util.concatenate([g for g in mesh.geometry.values()])
         report = validate(mesh, printer_profile=args.profile, material=args.material,
                           multicolor=args.multicolor, do_repair=not args.no_repair,
-                          do_slice=getattr(args, "slice", False), model_path=args.mesh)
+                          do_slice=getattr(args, "slice", False), model_path=args.mesh,
+                          expected_components=getattr(args, "parts", 1))
     except Exception as e:
         return _emit({"error": f"{type(e).__name__}: {e}"}, ok=False)
     return _emit(report.to_dict())
@@ -362,6 +378,32 @@ def cmd_step(args) -> int:
                   "note": "faceted (mesh-derived) STEP — solid body, not parametric history"})
 
 
+def cmd_slicer(args) -> int:
+    """Detect / install / inspect a headless slicer for real D2 slicing."""
+    from . import slicer as S
+    action = args.action
+    if action == "status":
+        det = S.detect_slicer()
+        info = {"os": S.os_arch(), "detected": None}
+        if det:
+            info["detected"] = {k: det.get(k) for k in ("kind", "name", "flatpak")}
+            if det["kind"] in S._BBS_FAMILY:
+                info["profiles"] = S._bbs_profiles(det)
+        else:
+            info["hint"] = "no slicer found — `studio3d slicer install` (OrcaSlicer recommended)"
+        return _emit(info, ok=det is not None)
+    if action == "install":
+        res = S.install(slicer=args.name or "orcaslicer", run=bool(args.yes))
+        return _emit(res)
+    if action == "profiles":
+        det = S.detect_slicer()
+        if not det:
+            return _emit({"error": "no slicer detected"}, ok=False)
+        return _emit({"slicer": det["kind"], "profiles": S._bbs_profiles(det)
+                      if det["kind"] in S._BBS_FAMILY else "n/a (PrusaSlicer needs $STUDIO3D_SLICER_CONFIG .ini)"})
+    return _emit({"error": f"unknown slicer action {action!r}"}, ok=False)
+
+
 def cmd_certify(args) -> int:
     """Sign off a Print-Readiness Certificate (human approval, audit trail)."""
     cert_path = os.path.join(args.bundle, "certificate.json")
@@ -428,6 +470,14 @@ def cmd_doctor(args) -> int:
         checks["pyyaml"] = "MISSING"
     import shutil as _sh
     checks["blender_render"] = "ok" if _sh.which("blender") else "matplotlib-fallback"
+    # slicer for REAL D2 (else D2 is the labeled proxy)
+    try:
+        from .slicer import detect_slicer
+        det = detect_slicer()
+        checks["slicer"] = f"{det['kind']} ({'flatpak' if det.get('flatpak') else 'native'})" if det \
+            else "none — D2 is proxy (run `studio3d slicer install`)"
+    except Exception as e:
+        checks["slicer_error"] = str(e)
     try:
         from .profiles import active_profile, load_printer_db
         checks["printer_db"] = f"{load_printer_db()['count']} printers"
@@ -653,6 +703,7 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--multicolor", action="store_true")
     v.add_argument("--no-repair", action="store_true")
     v.add_argument("--slice", action="store_true", help="run a REAL headless slice for D2 (needs a slicer installed)")
+    v.add_argument("--parts", type=int, default=1, help="expected separate bodies (1 for a single part; the part count for an assembly) — more = detached/levitating defect")
     v.set_defaults(func=cmd_validate)
 
     sl = sub.add_parser("slice", help="real headless slice-to-G-code (D2 ground truth)")
@@ -675,7 +726,7 @@ def build_parser() -> argparse.ArgumentParser:
     kbp.add_argument("-k", type=int, default=4, help="number of chunks to return")
     kbp.set_defaults(func=cmd_kb)
 
-    mu = sub.add_parser("muse", help="run the internal MUSE print-readiness benchmark")
+    mu = sub.add_parser("muse", help="internal fabrication-reliability self-check (NOT the MUSE benchmark; self-scored on bundled reference scripts)")
     mu.add_argument("--slice", action="store_true", help="use real slicing for D2 (needs a slicer)")
     mu.add_argument("--full", action="store_true", help="include per-case dimension detail")
     mu.add_argument("--timeout", type=float, default=60.0)
@@ -686,6 +737,12 @@ def build_parser() -> argparse.ArgumentParser:
     orp.add_argument("--out", help="write the reoriented mesh here")
     orp.add_argument("--overhang", type=float, default=50.0, help="overhang limit deg from vertical")
     orp.set_defaults(func=cmd_orient)
+
+    sk = sub.add_parser("slicer", help="detect / install / inspect a headless slicer for real D2 slicing")
+    sk.add_argument("action", choices=["status", "install", "profiles"])
+    sk.add_argument("--name", help="which slicer to install (orcaslicer|prusaslicer|bambustudio)")
+    sk.add_argument("--yes", action="store_true", help="actually perform the install (consent) instead of just printing the recipe")
+    sk.set_defaults(func=cmd_slicer)
 
     sp = sub.add_parser("step", help="export a mesh to faceted STEP (AP214) for CAD interchange")
     sp.add_argument("mesh", help="path to STL/3MF/GLB/OBJ/PLY")

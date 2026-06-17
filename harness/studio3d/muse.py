@@ -1,10 +1,15 @@
-"""studio3d.muse — an internal MUSE-style print-readiness benchmark.
+"""studio3d.muse — INTERNAL fabrication-reliability self-check (NOT the MUSE benchmark).
 
-The 2026 MUSE benchmark measures text-to-CAD as a FAILURE CASCADE across five
-cascading dimensions; the best generative models reach only 68% → 54% → 42 → 35 →
-28/100. studio3d's whole thesis is that a deterministic CSG + validate + (real)
-slice pipeline collapses that cascade. This harness measures it on a fixed set of
-representative cases so we can iterate to the highest score and prove the claim.
+HONESTY NOTE (read this): this is **not** the real MUSE benchmark (HK PolyU, 2026) and
+its number is **not comparable** to MUSE's 68→54→42→35→28 cascade. It runs a fixed set
+of REFERENCE scripts that ship with the tool through the fabricate→validate pipeline and
+reports how reliably the deterministic CSG kernel + validator produce watertight,
+print-passing solids. Because the reference scripts are the answer key (the hard
+text→CAD step is NOT exercised — a human/agent wrote the geometry), a high score here
+measures FABRICATION RELIABILITY, not generation quality. The real text→CAD ability must
+be measured by having the agent author from prompts blind, and "print_ready" is necessary
+but not sufficient for design-intent correctness. Treat this as a regression check, not a
+benchmark score to quote.
 
 Dimensions (each 0..1 per case):
     D1 syntax_exec      script runs in the sandbox and yields a mesh
@@ -165,7 +170,8 @@ def run_case(case: dict, do_slice: bool = False, timeout: float = 60.0) -> dict:
         rec["error"] = f"{type(e).__name__}: {e}"
         rec["muse"] = 0.0
         return rec
-    rep = validate(mesh, do_slice=do_slice)
+    exp_comp = case.get("expects", {}).get("components", 1)
+    rep = validate(mesh, do_slice=do_slice, expected_components=exp_comp)
     d1 = rep.dimensions["D1_mesh_integrity"]["pass"]
     dims["geometry_valid"] = 1.0 if d1 else 0.0
     # functionality proxy: expected component count + bbox in range
@@ -205,8 +211,14 @@ def run(do_slice: bool = False, timeout: float = 60.0, cases: list | None = None
         "manufacturability": round(100 * sum(1 for r in results if r["dims"]["manufacturability"] >= 1) / len(results), 1),
         "assemblability": round(100 * sum(1 for r in results if r["dims"]["assemblability"] >= 1) / len(results), 1),
     }
-    return {"muse_score": overall, "dimensions_pct": agg, "cascade_pct": cascade,
-            "n_cases": len(results), "do_slice": do_slice, "cases": results}
+    return {
+        "what_this_is": "INTERNAL fabrication-reliability self-check (self-scored on bundled "
+                        "reference scripts) — NOT the MUSE benchmark; not comparable to it. "
+                        "Measures pipeline reliability, not text→CAD generation quality.",
+        "reliability_score": overall,
+        "dimensions_pct": agg, "cascade_pct": cascade,
+        "n_cases": len(results), "do_slice": do_slice, "cases": results,
+    }
 
 
 if __name__ == "__main__":  # pragma: no cover

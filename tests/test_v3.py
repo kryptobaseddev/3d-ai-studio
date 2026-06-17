@@ -46,6 +46,25 @@ def test_disconnected_parts_detected():
     assert rep.metrics["kernel_metrics"]["n_components"] == 2
 
 
+def test_disconnected_single_part_fails_print_ready():
+    # a part that SHOULD be one solid but is in 2 floating pieces (the levitating-
+    # letters / detached-backrest defect) must NOT score as print-ready.
+    m = run_script_text("result = box(10,10,10) + box(10,10,10).at(50,0,0)", timeout=40)
+    rep = validate(m, expected_components=1)
+    assert rep.print_ready is False
+    assert rep.dimensions["D1_mesh_integrity"]["single_connected"] is False
+    assert any("disconnected pieces" in i for i in rep.issues)
+    assert rep.score < 100
+
+
+def test_declared_assembly_allows_multiple_bodies():
+    # an honest 2-part assembly is fine when the expected count is declared
+    m = run_script_text("result = box(10,10,10) + box(10,10,10).at(50,0,0)", timeout=40)
+    rep = validate(m, expected_components=2)
+    assert rep.dimensions["D1_mesh_integrity"]["single_connected"] is True
+    assert rep.print_ready is True
+
+
 # ---------------------------------------------------------------- heal
 def test_heal_makes_open_mesh_watertight():
     # an open box (missing a face) -> not watertight; heal should close it
@@ -112,6 +131,29 @@ def test_slice_model_no_slicer_returns_unavailable(monkeypatch):
     assert res["available"] is False and res["method"] == "proxy"
 
 
+def test_slicer_gcode_parse_bambu_and_prusa():
+    import studio3d.slicer as S
+    bambu = ("; model printing time: 25m 43s; total estimated time: 25m 44s\n"
+             "; total filament length [mm] : 1175.86\n; total filament weight [g] : 0.00\n")
+    out = S._parse_gcode_text(bambu, "PLA")
+    assert out["print_time"] == "25m 43s"
+    assert 2.0 < out["filament_g"] < 4.0     # computed from length when weight is 0
+    prusa = ("; estimated printing time (normal mode) = 1h 2m 3s\n; filament used [g] = 7.42\n")
+    out2 = S._parse_gcode_text(prusa, "PLA")
+    assert out2["print_time"].startswith("1h") and out2["filament_g"] == 7.42
+
+
+def test_slicer_os_detection_and_install_recipe():
+    import studio3d.slicer as S
+    info = S.os_arch()
+    assert info["os"] in ("linux", "macos", "windows")
+    rec = S.install_recipe("orcaslicer")
+    assert rec["steps"] and any("OrcaSlicer" in s or "orcaslicer" in s for s in rec["steps"])
+    # detection must never raise; returns a dict or None
+    det = S.detect_slicer()
+    assert det is None or ("kind" in det and "invocation" in det)
+
+
 # ---------------------------------------------------------------- certificate
 def test_certificate_records_provenance(tmp_path):
     from studio3d.certify import build_certificate
@@ -167,7 +209,9 @@ def test_kb_search_finds_overhang_rule():
 
 
 # ---------------------------------------------------------------- per-face AMS color
-def test_paint_and_multicolor_union_face_colors():
+def test_multicolor_union_keeps_separate_parts_through_sandbox():
+    # parts must stay SEPARATE (a merged mesh can only take one filament in Bambu/Orca);
+    # the merged mesh is still one watertight solid for the STL/validation path.
     code = (
         "def build():\n"
         "    body = ellipsoid(40,36,52).at(0,0,26).paint('#8d6e63')\n"
@@ -178,32 +222,42 @@ def test_paint_and_multicolor_union_face_colors():
     )
     m = run_script_text(code, timeout=90)            # through the sandbox (PLY handoff)
     assert m.is_watertight and m.is_volume
-    palette, idx = exporters.face_color_palette(m)
-    assert palette is not None and len(palette) == 3   # brown, white, orange
-    assert len(idx) == len(m.faces)
+    parts = (m.metadata or {}).get("studio3d_parts")
+    assert parts is not None and len(parts) == 4     # parts survived the subprocess
+    colors = [c for _, c, _ in parts]
+    assert colors == ["#8d6e63", "#ffffff", "#ffffff", "#e8a33b"]
 
 
-def test_export_3mf_painted_has_colorgroup_and_per_triangle(tmp_path):
-    import zipfile
+def test_export_3mf_bbs_is_real_bambu_format(tmp_path):
+    import zipfile, json
     code = ("def build():\n"
             "    a = box(20,20,20).paint('#ff0000')\n"
-            "    b = cylinder(h=30,d=8).paint('#0000ff')\n"
-            "    return multicolor_union(a, b)\n")
+            "    b = cylinder(h=30,d=8).at(0,0,15).paint('#0000ff')\n"
+            "    c = sphere(d=10).at(0,0,30).paint('#ff0000')\n"   # same red -> dedupes to slot 1
+            "    return multicolor_union(a, b, c)\n")
     m = run_script_text(code, timeout=60)
+    parts = (m.metadata or {}).get("studio3d_parts")
     p = str(tmp_path / "m.3mf")
-    exporters.export_3mf_painted(m, p, "twocolor")
-    xml = zipfile.ZipFile(p).read("3D/3dmodel.model").decode()
-    assert '<m:colorgroup id="1">' in xml
-    assert xml.count("<m:color ") == 2            # two distinct colors
-    assert xml.count('p1="') == len(m.faces)      # every triangle colored
-    # still loads as a watertight solid
-    loaded = trimesh.load(p)
-    g = list(loaded.geometry.values())[0] if hasattr(loaded, "geometry") else loaded
-    g.merge_vertices()
-    assert g.is_watertight
+    exporters.export_3mf_bbs(parts, p, "tri")
+    z = zipfile.ZipFile(p)
+    names = z.namelist()
+    # Bambu/Orca native layout — NOT core-3mf colorgroup
+    assert "Metadata/model_settings.config" in names
+    assert "Metadata/project_settings.config" in names
+    model = z.read("3D/3dmodel.model").decode()
+    assert model.count("<object ") == 3 and "m:colorgroup" not in model
+    import re as _re
+    ms = z.read("Metadata/model_settings.config").decode()
+    extruders = _re.findall(r'key="extruder" value="(\d+)"', ms)
+    assert extruders == ["1", "2", "1"]             # red, blue, red -> deduped slots
+    ps = json.loads(z.read("Metadata/project_settings.config").decode())
+    assert ps["filament_colour"] == ["#FF0000", "#0000FF"]   # 2 deduped slot colors
+    assert len(ps["filament_settings_id"]) == 2              # full template, expanded to 2 slots
+    assert len(ps) > 100                                     # built from the real Bambu template
 
 
-def test_write_bundle_uses_painted_3mf(tmp_path):
+def test_write_bundle_uses_bbs_3mf(tmp_path):
+    import zipfile
     code = ("def build():\n"
             "    return multicolor_union(box(20,20,20).paint('#ff0000'),"
             " sphere(d=12).at(0,0,16).paint('#00ff00'))\n")
@@ -212,8 +266,9 @@ def test_write_bundle_uses_painted_3mf(tmp_path):
                      script=code, multicolor=True, formats=["stl", "3mf", "glb"])
     rep = validate(m)
     entry = exporters.write_bundle(m, str(tmp_path / "tc"), spec, rep, ["stl", "3mf", "glb"])
-    assert entry["multicolor"] is True
-    assert len(entry["palette"]) == 2
+    assert entry["multicolor"] is True and len(entry["palette"]) == 2
+    z = zipfile.ZipFile(str(tmp_path / "tc" / "model.3mf"))
+    assert "Metadata/project_settings.config" in z.namelist()   # BBS format, not colorgroup
 
 
 # ---------------------------------------------------------------- STEP export
@@ -245,9 +300,12 @@ def test_bundle_can_emit_step(tmp_path):
 
 
 # ---------------------------------------------------------------- MUSE benchmark
-def test_muse_pipeline_scores_high():
+def test_fabrication_reliability_high():
+    # INTERNAL self-check (NOT the MUSE benchmark): the deterministic CSG + validate
+    # pipeline should reliably fabricate the bundled reference scripts to watertight,
+    # print-passing solids. This measures pipeline reliability, not text→CAD quality.
     res = muse.run(do_slice=False, timeout=90)
-    # deterministic CSG + validate should collapse the MUSE failure cascade
-    assert res["muse_score"] >= 95.0, res
+    assert "NOT the MUSE benchmark" in res["what_this_is"]
+    assert res["reliability_score"] >= 95.0, res
     assert res["dimensions_pct"]["geometry_valid"] == 100.0
     assert all(c.get("print_ready") for c in res["cases"]), [c["name"] for c in res["cases"] if not c.get("print_ready")]

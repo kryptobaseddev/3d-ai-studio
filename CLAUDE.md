@@ -67,20 +67,28 @@ cd web && npm install && npm run dev                          # live viewer (por
 ```
 
 ## CLI commands
-`gen` · `gen-script` (`--params`/`--no-slice`) · `run-script` · `validate` (`--slice`) ·
-`slice` · `step` · `tweak` · `orient` · `certify` · `kb` · `muse` · `render` · `manifest` ·
-`printers` · `profile {list,show,use,add}` · `import` · `history` · `examples` · `doctor`
+`gen` · `gen-script` (`--params`/`--no-slice`) · `run-script` · `validate` (`--slice`/`--parts`) ·
+`slice` · `slicer {status,install,profiles}` · `step` · `tweak` · `orient` · `certify` · `kb` ·
+`muse` · `render` · `manifest` · `printers` · `profile {list,show,use,add}` · `import` · `history` · `examples` · `doctor`
 
 ## v0.4 modules (the "beat Meshy" moat — see docs/V3-COMPETE-WITH-MESHY.md)
-- `slicer.py` — real headless slice-to-G-code for D2 (Orca/Prusa/Bambu/Cura); labeled proxy fallback.
+- `slicer.py` — real headless slice for D2 (Orca/Bambu/Prusa/Super/Cura; native/AppImage/.app/flatpak),
+  correct per-slicer CLI (Bambu/Orca `--load-settings`+`--load-filaments`+`--slice`; Prusa `-g --load`),
+  Bambu/Orca gcode-header parsing (verified real slice on Bambu 2.7.1). Cross-OS detect + install
+  (`studio3d slicer`). NOTE: do NOT pass `--outputdir` with an absolute `--export-3mf` (Bambu doubles the path).
 - `certify.py` — Print-Readiness Certificate (prompt→script/file hashes→D1-D4→slice→human approval).
 - `kb.py` + `data/kb/` — offline BM25 DFAM/CSG domain-RAG over bundled rules + registry skills.
-- `muse.py` — internal MUSE benchmark (5 cascade dims); `studio3d muse` scores 100.
+- `muse.py` — INTERNAL fabrication-reliability self-check (NOT the MUSE benchmark; self-scored
+  on bundled reference scripts). Measures pipeline reliability, not text→CAD quality — don't quote it as a MUSE score.
 - `validate.heal()` (generative path), `validate.orient_for_print()` (SEG), `metrics.kernel_metrics`.
 - `dsl.interference()` / `dsl.arrange_on_bed()` — assemblies. `P` dict = named params (sandbox).
-- exporters ship `model.py`+`params.json` per bundle; `export_3mf_painted` = per-FACE AMS
-  color on a single CSG union (from `dsl.paint()` + `dsl.multicolor_union()`); `export_3mf_multi`
-  = per-part objects. `step.py` = dependency-free faceted AP214 STEP (no OCP needed on 3.14).
+- AMS multicolor: `dsl.paint()` + `dsl.multicolor_union()` keep parts SEPARATE (merged mesh can
+  only take one filament); the parts ride through the sandbox in `mesh.metadata['studio3d_parts']`;
+  `exporters.export_3mf_bbs` writes Bambu/Orca native format (per-object `extruder` in
+  model_settings.config + N-filament project_settings.config from `data/bbs/project_template_a1.json`).
+  Per-object routing verified to survive a Bambu round-trip. `step.py` = dependency-free faceted
+  AP214 STEP (no OCP on 3.14; structurally verified, CAD import not round-trip-confirmed).
+- `print_ready` now fails when `n_components > expected_components` (detached/levitating parts).
 
 ## The fidelity loop (how 99% intent-match is reached)
 Generate → `studio3d render` → **Read the view PNGs** → score on the intent rubric
