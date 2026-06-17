@@ -154,6 +154,74 @@ def export_3mf_multi(parts: "list[tuple]", path: str, name: str = "assembly") ->
     return path
 
 
+def face_color_palette(mesh: trimesh.Trimesh):
+    """Return (palette, per_face_index) if the mesh carries >1 distinct per-face
+    color, else (None, None). palette is a list of '#RRGGBB'."""
+    vis = getattr(mesh, "visual", None)
+    fc = getattr(vis, "face_colors", None) if vis is not None else None
+    if fc is None or len(fc) != len(mesh.faces):
+        return None, None
+    rgb = np.asarray(fc)[:, :3].astype(int)
+    uniq, inv = np.unique(rgb, axis=0, return_inverse=True)
+    if len(uniq) < 2:
+        return None, None
+    palette = ["#%02x%02x%02x" % (r, g, b) for r, g, b in uniq]
+    return palette, inv.astype(int)
+
+
+def export_3mf_painted(mesh: trimesh.Trimesh, path: str, name: str = "model") -> str:
+    """Write a single-object 3MF with PER-TRIANGLE color (AMS multicolor) read from
+    the mesh's face_colors. Each distinct color becomes a colorgroup entry; every
+    triangle references its color via p1. Bambu Studio / OrcaSlicer map these to AMS
+    filament slots. This is per-face color on ONE watertight CSG union."""
+    palette, idx = face_color_palette(mesh)
+    if palette is None:
+        return export_3mf(mesh, path, name=name)
+    verts = np.asarray(mesh.vertices, dtype=float)
+    faces = np.asarray(mesh.faces, dtype=int)
+    v_lines = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>' for x, y, z in verts)
+    colors_xml = "".join(f'<m:color color="#{_norm_hex(c).upper()}FF"/>' for c in palette)
+    t_lines = "".join(
+        f'<triangle v1="{a}" v2="{b}" v3="{c}" pid="1" p1="{int(idx[i])}"/>'
+        for i, (a, b, c) in enumerate(faces)
+    )
+    model_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<model unit="millimeter" xml:lang="en-US" '
+        'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
+        'xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">\n'
+        f'  <metadata name="Title">{_xml_escape(name)}</metadata>\n'
+        '  <metadata name="Application">studio3d</metadata>\n'
+        '  <resources>\n'
+        f'    <m:colorgroup id="1">{colors_xml}</m:colorgroup>\n'
+        '    <object id="2" type="model" pid="1" pindex="0">\n'
+        f'      <mesh><vertices>{v_lines}</vertices><triangles>{t_lines}</triangles></mesh>\n'
+        '    </object>\n'
+        '  </resources>\n'
+        '  <build><item objectid="2"/></build>\n'
+        '</model>\n'
+    )
+    content_types = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>'
+        '</Types>'
+    )
+    rels = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Target="/3D/3dmodel.model" Id="rel0" '
+        'Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>'
+        '</Relationships>'
+    )
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml", content_types)
+        z.writestr("_rels/.rels", rels)
+        z.writestr("3D/3dmodel.model", model_xml)
+    return path
+
+
 # ======================================================================
 # Thumbnail (headless)
 # ======================================================================
@@ -221,14 +289,38 @@ def write_bundle(mesh: trimesh.Trimesh, out_dir: str, spec, report, formats: Ite
     color = getattr(spec, "color", None)
     files: dict[str, str] = {}
 
+    # per-face AMS multicolor? (from multicolor_union — face_colors on one solid)
+    palette, _idx = face_color_palette(mesh)
+    multicolor = palette is not None
+    # persist onto the spec so the rescanned manifest (write_manifest) carries it
+    if multicolor:
+        try:
+            spec.multicolor = True
+            spec.palette = palette
+        except Exception:
+            pass
+
     fmts = set(f.lower() for f in formats)
     if "stl" in fmts:
         files["stl"] = os.path.basename(export_stl(mesh, os.path.join(out_dir, "model.stl")))
     if "3mf" in fmts:
-        files["3mf"] = os.path.basename(export_3mf(mesh, os.path.join(out_dir, "model.3mf"),
-                                                   color=color or "#9aa7b2", name=spec.name))
+        if multicolor:
+            export_3mf_painted(mesh, os.path.join(out_dir, "model.3mf"), name=spec.name)
+        else:
+            export_3mf(mesh, os.path.join(out_dir, "model.3mf"), color=color or "#9aa7b2", name=spec.name)
+        files["3mf"] = "model.3mf"
     if "glb" in fmts:
-        files["glb"] = os.path.basename(export_glb(mesh, os.path.join(out_dir, "model.glb"), color=color))
+        # a painted mesh already carries face_colors -> export_glb keeps them;
+        # otherwise tint by the single spec color.
+        files["glb"] = os.path.basename(export_glb(
+            mesh, os.path.join(out_dir, "model.glb"), color=None if multicolor else color))
+    if "step" in fmts:
+        try:
+            from .step import export_step
+            export_step(mesh, os.path.join(out_dir, "model.step"), name=spec.slug)
+            files["step"] = "model.step"
+        except Exception as e:
+            files["step_error"] = f"{type(e).__name__}: {e}"
     # always render a thumbnail
     try:
         files["thumb"] = os.path.basename(render_thumbnail(mesh, os.path.join(out_dir, "thumb.png"), color=color))
@@ -265,6 +357,8 @@ def write_bundle(mesh: trimesh.Trimesh, out_dir: str, spec, report, formats: Ite
         "files": files,
         "editable": bool(script),
         "parameters": params or {},
+        "multicolor": multicolor,
+        "palette": palette or ([color] if color else []),
         "print_ready": report.print_ready if hasattr(report, "print_ready") else None,
         "score": report.score if hasattr(report, "score") else None,
         "bbox_mm": report.metrics.get("bbox_mm") if hasattr(report, "metrics") else None,
@@ -295,7 +389,8 @@ def write_manifest(output_root: str) -> str:
                     spec = json.load(f)
             files = {}
             for fn, key in (("model.stl", "stl"), ("model.3mf", "3mf"),
-                            ("model.glb", "glb"), ("thumb.png", "thumb"),
+                            ("model.glb", "glb"), ("model.step", "step"),
+                            ("thumb.png", "thumb"),
                             ("model.py", "source"), ("params.json", "params"),
                             ("design.json", "plan"), ("certificate.json", "certificate")):
                 if os.path.exists(os.path.join(d, fn)):
@@ -309,6 +404,8 @@ def write_manifest(output_root: str) -> str:
                 "files": files,
                 "editable": os.path.exists(os.path.join(d, "model.py")),
                 "parameters": spec.get("parameters", {}),
+                "multicolor": bool(spec.get("multicolor")),
+                "palette": spec.get("palette", []),
                 "print_ready": rep.get("print_ready"),
                 "score": rep.get("score"),
                 "bbox_mm": rep.get("metrics", {}).get("bbox_mm"),

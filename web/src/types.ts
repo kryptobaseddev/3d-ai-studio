@@ -21,10 +21,12 @@ export interface ManifestEntry {
   category?: string;
   printer_profile?: string;
   files: {
-    stl?: string; "3mf"?: string; glb?: string; thumb?: string;
+    stl?: string; "3mf"?: string; glb?: string; step?: string; thumb?: string;
     source?: string; params?: string; plan?: string; certificate?: string;
   };
   editable?: boolean;
+  multicolor?: boolean;
+  palette?: string[];
   parameters?: Record<string, number | string | boolean>;
   print_ready?: boolean;
   score?: number;

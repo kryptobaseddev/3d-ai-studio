@@ -344,6 +344,24 @@ def cmd_orient(args) -> int:
     return _emit(res)
 
 
+def cmd_step(args) -> int:
+    """Export a mesh to faceted (mesh-derived) STEP (AP214) for CAD interchange —
+    imports as a solid into FreeCAD / Fusion 360 / SolidWorks / Onshape."""
+    import trimesh
+    from .step import export_step
+    out = args.out or (os.path.splitext(args.mesh)[0] + ".step")
+    try:
+        mesh = trimesh.load(args.mesh, force="mesh")
+        if isinstance(mesh, trimesh.Scene):
+            mesh = trimesh.util.concatenate([g for g in mesh.geometry.values()])
+        mesh.merge_vertices()
+        export_step(mesh, out, name=os.path.splitext(os.path.basename(out))[0])
+    except Exception as e:
+        return _emit({"error": f"{type(e).__name__}: {e}"}, ok=False)
+    return _emit({"step": out, "faces": int(len(mesh.faces)), "vertices": int(len(mesh.vertices)),
+                  "note": "faceted (mesh-derived) STEP — solid body, not parametric history"})
+
+
 def cmd_certify(args) -> int:
     """Sign off a Print-Readiness Certificate (human approval, audit trail)."""
     cert_path = os.path.join(args.bundle, "certificate.json")
@@ -668,6 +686,11 @@ def build_parser() -> argparse.ArgumentParser:
     orp.add_argument("--out", help="write the reoriented mesh here")
     orp.add_argument("--overhang", type=float, default=50.0, help="overhang limit deg from vertical")
     orp.set_defaults(func=cmd_orient)
+
+    sp = sub.add_parser("step", help="export a mesh to faceted STEP (AP214) for CAD interchange")
+    sp.add_argument("mesh", help="path to STL/3MF/GLB/OBJ/PLY")
+    sp.add_argument("--out", help="output .step path (default: alongside input)")
+    sp.set_defaults(func=cmd_step)
 
     cf = sub.add_parser("certify", help="human sign-off on a bundle's Print-Readiness Certificate")
     cf.add_argument("bundle", help="bundle dir containing certificate.json")

@@ -91,6 +91,7 @@ class ModelSpec:
     material: str = "PLA"
     multicolor: bool = False
     color: str | None = None          # hex like "#3a86ff"
+    palette: list[str] = field(default_factory=list)   # AMS colors (per-face multicolor)
 
     # inputs
     reference_images: list[str] = field(default_factory=list)

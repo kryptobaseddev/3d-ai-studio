@@ -152,10 +152,17 @@ the recommended slicer format (3MF for Bambu/AMS color, STL otherwise), key metr
 **auditable Print-Readiness Certificate** (`certificate.json`: prompt → script hash →
 D1–D4 → slice → human approval) and **editable source** (`model.py` + `params.json`).
 
+For **multicolor / AMS**, author parts with `.paint("#hex")` and combine via
+`multicolor_union(...)` — the bundle's `model.3mf` then carries per-face AMS colors and
+the GLB shows them; the manifest marks `multicolor` + `palette`. For **CAD interchange**,
+add `step` to `--formats` (or run `studio3d step <bundle>/model.stl`) to emit a faceted
+STEP solid that opens in Fusion/FreeCAD/SolidWorks.
+
 Real extras the user can run:
 - `studio3d slice <bundle>/model.3mf` — REAL slice-to-G-code (D2 ground truth): print
   time + filament grams (needs a slicer installed; otherwise D2 is the labeled proxy).
 - `studio3d orient <bundle>/model.stl --out reoriented.stl` — support-minimizing pose.
+- `studio3d step <bundle>/model.stl` — faceted STEP for CAD interchange.
 - `studio3d tweak --plan <slug>.design.json --set <k>=<v> --script model.py` — change one
   knob and regenerate deterministically.
 - `studio3d certify <bundle> --approve` — record human sign-off in the certificate.

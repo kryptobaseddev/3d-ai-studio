@@ -68,7 +68,7 @@ cd web && npm install && npm run dev                          # live viewer (por
 
 ## CLI commands
 `gen` · `gen-script` (`--params`/`--no-slice`) · `run-script` · `validate` (`--slice`) ·
-`slice` · `tweak` · `orient` · `certify` · `kb` · `muse` · `render` · `manifest` ·
+`slice` · `step` · `tweak` · `orient` · `certify` · `kb` · `muse` · `render` · `manifest` ·
 `printers` · `profile {list,show,use,add}` · `import` · `history` · `examples` · `doctor`
 
 ## v0.4 modules (the "beat Meshy" moat — see docs/V3-COMPETE-WITH-MESHY.md)
@@ -78,7 +78,9 @@ cd web && npm install && npm run dev                          # live viewer (por
 - `muse.py` — internal MUSE benchmark (5 cascade dims); `studio3d muse` scores 100.
 - `validate.heal()` (generative path), `validate.orient_for_print()` (SEG), `metrics.kernel_metrics`.
 - `dsl.interference()` / `dsl.arrange_on_bed()` — assemblies. `P` dict = named params (sandbox).
-- exporters ship `model.py`+`params.json` per bundle; `export_3mf_multi` = per-part AMS colorgroups.
+- exporters ship `model.py`+`params.json` per bundle; `export_3mf_painted` = per-FACE AMS
+  color on a single CSG union (from `dsl.paint()` + `dsl.multicolor_union()`); `export_3mf_multi`
+  = per-part objects. `step.py` = dependency-free faceted AP214 STEP (no OCP needed on 3.14).
 
 ## The fidelity loop (how 99% intent-match is reached)
 Generate → `studio3d render` → **Read the view PNGs** → score on the intent rubric

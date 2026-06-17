@@ -166,6 +166,84 @@ def test_kb_search_finds_overhang_rule():
     assert st["chunks"] > 10 and st["vocab"] > 100
 
 
+# ---------------------------------------------------------------- per-face AMS color
+def test_paint_and_multicolor_union_face_colors():
+    code = (
+        "def build():\n"
+        "    body = ellipsoid(40,36,52).at(0,0,26).paint('#8d6e63')\n"
+        "    eyeL = sphere(d=12).at(-9,16,34).paint('#ffffff')\n"
+        "    eyeR = sphere(d=12).at(9,16,34).paint('#ffffff')\n"
+        "    beak = cone(h=8,d=7).rotate_x(90).at(0,20,28).paint('#e8a33b')\n"
+        "    return multicolor_union(body, eyeL, eyeR, beak).on_bed()\n"
+    )
+    m = run_script_text(code, timeout=90)            # through the sandbox (PLY handoff)
+    assert m.is_watertight and m.is_volume
+    palette, idx = exporters.face_color_palette(m)
+    assert palette is not None and len(palette) == 3   # brown, white, orange
+    assert len(idx) == len(m.faces)
+
+
+def test_export_3mf_painted_has_colorgroup_and_per_triangle(tmp_path):
+    import zipfile
+    code = ("def build():\n"
+            "    a = box(20,20,20).paint('#ff0000')\n"
+            "    b = cylinder(h=30,d=8).paint('#0000ff')\n"
+            "    return multicolor_union(a, b)\n")
+    m = run_script_text(code, timeout=60)
+    p = str(tmp_path / "m.3mf")
+    exporters.export_3mf_painted(m, p, "twocolor")
+    xml = zipfile.ZipFile(p).read("3D/3dmodel.model").decode()
+    assert '<m:colorgroup id="1">' in xml
+    assert xml.count("<m:color ") == 2            # two distinct colors
+    assert xml.count('p1="') == len(m.faces)      # every triangle colored
+    # still loads as a watertight solid
+    loaded = trimesh.load(p)
+    g = list(loaded.geometry.values())[0] if hasattr(loaded, "geometry") else loaded
+    g.merge_vertices()
+    assert g.is_watertight
+
+
+def test_write_bundle_uses_painted_3mf(tmp_path):
+    code = ("def build():\n"
+            "    return multicolor_union(box(20,20,20).paint('#ff0000'),"
+            " sphere(d=12).at(0,0,16).paint('#00ff00'))\n")
+    m = run_script_text(code, timeout=60)
+    spec = ModelSpec(prompt="two color", name="tc", category="decorative",
+                     script=code, multicolor=True, formats=["stl", "3mf", "glb"])
+    rep = validate(m)
+    entry = exporters.write_bundle(m, str(tmp_path / "tc"), spec, rep, ["stl", "3mf", "glb"])
+    assert entry["multicolor"] is True
+    assert len(entry["palette"]) == 2
+
+
+# ---------------------------------------------------------------- STEP export
+def test_step_export_is_well_formed(tmp_path):
+    import re
+    from studio3d.step import export_step
+    m = run_script_text("result = box(30,20,10) - cylinder(h=20,d=6)", timeout=40)
+    p = str(tmp_path / "part.step")
+    export_step(m, p, "part")
+    txt = open(p).read()
+    defs = set(int(x) for x in re.findall(r"#(\d+)\s*=", txt))
+    refs = set(int(x) for x in re.findall(r"#(\d+)", txt))
+    assert refs - defs == set()                      # no dangling references
+    assert "10303 214" in txt                        # AP214 schema
+    assert txt.count("MANIFOLD_SOLID_BREP(") == 1
+    assert txt.count("CLOSED_SHELL(") == 1
+    assert txt.count("ADVANCED_FACE(") == len(m.faces)
+    assert txt.strip().endswith("END-ISO-10303-21;")
+
+
+def test_bundle_can_emit_step(tmp_path):
+    m = run_script_text("result = cube(20)", timeout=40)
+    spec = ModelSpec(prompt="cube", name="c", category="mechanical", script="result=cube(20)",
+                     formats=["stl", "step"])
+    rep = validate(m)
+    entry = exporters.write_bundle(m, str(tmp_path / "c"), spec, rep, ["stl", "step"])
+    assert entry["files"].get("step") == "model.step"
+    assert (tmp_path / "c" / "model.step").exists()
+
+
 # ---------------------------------------------------------------- MUSE benchmark
 def test_muse_pipeline_scores_high():
     res = muse.run(do_slice=False, timeout=90)

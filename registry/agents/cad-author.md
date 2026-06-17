@@ -48,6 +48,12 @@ for the design rules). Everything is in millimeters; Z is up; the build plate is
    - **Vessels** — model a SMOOTH inner bore (plain `cylinder`/`revolve`, no decoration)
      *inside* a separately decorated outer shell, so the wall stays ≥ 0.8 mm everywhere
      regardless of outer flutes/texture. Never cut decoration through the wall.
+   - **Multicolor (AMS)** — give each part a color with `.paint("#hex")` and combine with
+     `multicolor_union(partA, partB, …)` instead of `+`. The result is ONE watertight solid
+     with per-FACE colors; the exporter writes an AMS-ready 3MF (per-triangle color groups)
+     and a colored GLB. Example: `multicolor_union(body.paint("#8d6e63"),
+     eyes.paint("#fff"), beak.paint("#e8a33b"))`. Use this whenever the design plan lists
+     per-part `colors`.
    Apply print-safe construction while modeling:
    - walls ≥ 0.8 mm (FDM 0.4), features ≥ 0.4 mm, pins ≥ 5 mm (or filleted),
    - base chamfer for elephant's foot, teardrop/≥2 mm horizontal holes,
