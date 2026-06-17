@@ -90,22 +90,27 @@ class Solid:
         a & b   intersection
     """
 
-    __slots__ = ("mesh", "_name", "_color")
+    __slots__ = ("mesh", "_name", "_color", "_parts")
 
-    def __init__(self, mesh: trimesh.Trimesh, name: str = "solid", color: str | None = None):
+    def __init__(self, mesh: trimesh.Trimesh, name: str = "solid", color: str | None = None,
+                 parts: list | None = None):
         if not isinstance(mesh, trimesh.Trimesh):
             raise TypeError("Solid wraps a trimesh.Trimesh")
         # always work on a copy so transforms never mutate a shared mesh
         self.mesh = mesh.copy()
         self._name = name
         self._color = color
+        # for AMS multicolor: the ORIGINAL colored part meshes [(trimesh, hex, name)],
+        # kept SEPARATE (a merged mesh can only take one filament — Bambu/Orca colour
+        # is per-object/part). Carried through transforms so .on_bed() stays aligned.
+        self._parts = parts
 
     # ---- color (for per-part / AMS multicolor) -------------------------
     def paint(self, color: str) -> "Solid":
         """Tag this solid with a hex color (e.g. '#e23b3b'). Used by
-        :func:`multicolor_union` to assign per-face colors on a single union so
-        the 3MF carries AMS multicolor. Returns a new colored Solid."""
-        return Solid(self.mesh, self._name, color=color)
+        :func:`multicolor_union` to assign per-part colors that the 3MF exporter
+        maps to AMS filament slots. Returns a new colored Solid."""
+        return Solid(self.mesh, self._name, color=color, parts=self._parts)
 
     # ---- introspection -------------------------------------------------
     @property
@@ -143,7 +148,14 @@ class Solid:
     def _xform(self, matrix: np.ndarray, name: str | None = None) -> "Solid":
         m = self.mesh.copy()
         m.apply_transform(matrix)
-        return Solid(m, name or self._name, color=self._color)
+        parts = None
+        if self._parts:
+            parts = []
+            for pm, col, nm in self._parts:
+                pmc = pm.copy()
+                pmc.apply_transform(matrix)
+                parts.append((pmc, col, nm))
+        return Solid(m, name or self._name, color=self._color, parts=parts)
 
     def translate(self, x: float = 0, y: float = 0, z: float = 0) -> "Solid":
         return self._xform(tf.translation_matrix([x, y, z]))
@@ -618,21 +630,20 @@ def multicolor_union(*parts: Solid, default: str = "#9aa7b2") -> Solid:
         raise ValueError("multicolor_union needs at least one part")
     meshes = [_as_mesh(p) for p in plist]
     colors = [getattr(p, "_color", None) or default for p in plist]
+    names = [getattr(p, "_name", None) or f"part{i+1}" for i, p in enumerate(plist)]
 
     union_mesh = trimesh.boolean.union(meshes)
     union_mesh.merge_vertices()
     trimesh.repair.fix_normals(union_mesh)
 
     centroids = union_mesh.triangles_center  # (F,3)
-    # distance from each union face centroid to each part's surface; the part that
-    # contributed the face has ~0 distance there -> argmin picks the right color.
+    # nearest-source-part per union face -> per-face colors for the GLB/preview.
     best = np.full(len(centroids), 0, dtype=int)
     best_d = np.full(len(centroids), np.inf)
     for idx, m in enumerate(meshes):
         try:
             d = np.abs(trimesh.proximity.signed_distance(m, centroids))
         except Exception:
-            # fallback: nearest-point distance
             _, d, _ = trimesh.proximity.closest_point(m, centroids)
             d = np.abs(d)
         closer = d < best_d
@@ -642,10 +653,13 @@ def multicolor_union(*parts: Solid, default: str = "#9aa7b2") -> Solid:
     palette = [_hex_rgba(c) for c in colors]
     face_colors = np.array([palette[i] for i in best], dtype=np.uint8)
     union_mesh.visual = trimesh.visual.ColorVisuals(union_mesh, face_colors=face_colors)
-    s = Solid(union_mesh, "multicolor")
-    # carry the first color as the solid's nominal color
-    s._color = colors[0]
-    return s
+
+    # KEEP the original closed part solids SEPARATE — the 3MF exporter writes them
+    # as distinct objects each assigned a filament (Bambu/Orca colour is per-object,
+    # NOT per-face; a merged mesh can only take one filament). The merged union is
+    # still used for the watertight STL + validation (one printable solid).
+    part_list = [(meshes[i].copy(), colors[i], names[i]) for i in range(len(meshes))]
+    return Solid(union_mesh, "multicolor", color=colors[0], parts=part_list)
 
 
 def linear_pattern(solid: Solid, count: int, dx: float = 0, dy: float = 0, dz: float = 0) -> list[Solid]:

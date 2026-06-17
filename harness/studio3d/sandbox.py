@@ -133,6 +133,18 @@ _RUNNER_TEMPLATE = textwrap.dedent(
     # PLY preserves shared vertices (unlike STL's triangle soup), so watertight
     # topology survives the cross-process handoff.
     solid.mesh.export({out_path!r})
+    # AMS multicolor: serialize the separate colored parts as sidecar PLYs so the
+    # 3MF exporter can write them as distinct objects (per-object filament colour).
+    _parts = getattr(solid, "_parts", None)
+    if _parts:
+        import os as _os
+        _pd = _os.path.dirname({out_path!r})
+        _meta = []
+        for _i, (_pm, _col, _nm) in enumerate(_parts):
+            _pp = _os.path.join(_pd, "part_%d.ply" % _i)
+            _pm.export(_pp)
+            _meta.append({{"i": _i, "color": _col, "name": _nm, "file": _pp}})
+        _json.dump(_meta, open(_os.path.join(_pd, "parts.json"), "w"))
     print("STUDIO3D_OK", len(solid.mesh.faces))
     '''
 )
@@ -194,4 +206,17 @@ def run_script_text(code: str, timeout: float = 30.0, cpu_seconds: int = 25,
         mesh = trimesh.load(out_path, process=False)
         # defensively merge any coincident vertices so watertight topology is intact
         mesh.merge_vertices()
+        # reattach AMS multicolor parts (if the script used multicolor_union)
+        parts_json = os.path.join(td, "parts.json")
+        if os.path.exists(parts_json):
+            try:
+                meta = json.load(open(parts_json))
+                parts = []
+                for p in meta:
+                    pm = trimesh.load(p["file"], process=False)
+                    pm.merge_vertices()
+                    parts.append((pm, p["color"], p["name"]))
+                mesh.metadata["studio3d_parts"] = parts
+            except Exception:
+                pass
         return mesh

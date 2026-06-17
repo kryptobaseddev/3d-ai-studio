@@ -222,6 +222,114 @@ def export_3mf_painted(mesh: trimesh.Trimesh, path: str, name: str = "model") ->
     return path
 
 
+def export_3mf_bbs(parts, path, name: str = "model",
+                   filament_id: str = "Bambu PLA Basic @BBL A1",
+                   filament_type: str = "PLA", filament_code: str = "GFA00") -> str:
+    """Write a Bambu Studio / OrcaSlicer multicolor 3MF that ACTUALLY maps to AMS.
+
+    Format verified against the installed Bambu Studio 2.7.1 (and OrcaSlicer bbs_3mf
+    source): N separate <object>s in 3D/3dmodel.model, a Metadata/model_settings.config
+    assigning each object a 1-based `extruder` (filament slot), and a JSON
+    Metadata/project_settings.config carrying the parallel filament arrays
+    (filament_settings_id / filament_type / filament_ids / filament_self_index +
+    filament_colour). Core-3MF <m:colorgroup> is NOT used — Bambu ignores it.
+
+    ``parts`` = list of (trimesh, color_hex, part_name).
+    """
+    parts = list(parts)
+    # dedupe identical part colors onto the SAME filament slot (2 white eyes -> 1 slot)
+    slot_of, slots = {}, []
+    for _m, c, _n in parts:
+        key = _norm_hex(c)
+        if key not in slot_of:
+            slot_of[key] = len(slots)
+            slots.append("#" + key.upper())
+    nslots = len(slots)
+
+    obj_blocks, item_blocks, cfg_blocks = [], [], []
+    oid = 2
+    for (mesh, color, pname) in parts:
+        verts = np.asarray(mesh.vertices, dtype=float)
+        faces = np.asarray(mesh.faces, dtype=int)
+        v_lines = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>' for x, y, z in verts)
+        t_lines = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in faces)
+        k = slot_of[_norm_hex(color)] + 1   # 1-based deduped filament slot
+        obj_blocks.append(
+            f'    <object id="{oid}" type="model"><mesh>'
+            f'<vertices>{v_lines}</vertices><triangles>{t_lines}</triangles></mesh></object>'
+        )
+        item_blocks.append(f'    <item objectid="{oid}" transform="1 0 0 0 1 0 0 0 1 0 0 0" printable="1"/>')
+        cfg_blocks.append(
+            f'  <object id="{oid}">'
+            f'<metadata key="name" value="{_xml_escape(pname)}"/>'
+            f'<metadata key="extruder" value="{k}"/>'
+            f'</object>'
+        )
+        oid += 2
+
+    model_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<model unit="millimeter" xml:lang="en-US" '
+        'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">\n'
+        f'  <metadata name="Title">{_xml_escape(name)}</metadata>\n'
+        '  <metadata name="Application">studio3d</metadata>\n'
+        '  <resources>\n' + "\n".join(obj_blocks) + '\n  </resources>\n'
+        '  <build>\n' + "\n".join(item_blocks) + '\n  </build>\n'
+        '</model>\n'
+    )
+    model_settings = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n' + "\n".join(cfg_blocks) + '\n</config>\n'
+    )
+
+    # Build project_settings.config from a known-good Bambu A1 template (full printer
+    # context) so Bambu/Orca ACCEPT it on load, then expand the filament arrays to
+    # nslots. (A bare filament-array config is reset to defaults by Bambu.)
+    import os as _os
+    tmpl_path = _os.path.join(_os.path.dirname(__file__), "data", "bbs", "project_template_a1.json")
+    try:
+        with open(tmpl_path, encoding="utf-8") as _tf:
+            project = json.load(_tf)
+    except Exception:
+        project = {"version": "01.07.01.00", "from": "project"}
+
+    def _expand(key, fill):
+        cur = project.get(key)
+        base = (cur[0] if isinstance(cur, list) and cur else fill)
+        project[key] = [base] * nslots
+    for key, fill in (("filament_settings_id", filament_id), ("filament_type", filament_type),
+                      ("filament_ids", filament_code), ("filament_is_support", "0"),
+                      ("filament_multi_colour", "0")):
+        if key in project or key in ("filament_settings_id", "filament_type", "filament_ids"):
+            _expand(key, fill)
+    project["filament_colour"] = slots
+    project["filament_self_index"] = [str(i + 1) for i in range(nslots)]
+    if "filament_map" in project:
+        project["filament_map"] = ["1"] * nslots
+    project_settings = json.dumps(project, indent=1)
+    content_types = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>'
+        '<Default Extension="config" ContentType="application/octet-stream"/>'
+        '</Types>'
+    )
+    rels = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Target="/3D/3dmodel.model" Id="rel0" '
+        'Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>'
+        '</Relationships>'
+    )
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml", content_types)
+        z.writestr("_rels/.rels", rels)
+        z.writestr("3D/3dmodel.model", model_xml)
+        z.writestr("Metadata/model_settings.config", model_settings)
+        z.writestr("Metadata/project_settings.config", project_settings)
+    return path
+
+
 # ======================================================================
 # Thumbnail (headless)
 # ======================================================================
@@ -289,14 +397,18 @@ def write_bundle(mesh: trimesh.Trimesh, out_dir: str, spec, report, formats: Ite
     color = getattr(spec, "color", None)
     files: dict[str, str] = {}
 
-    # per-face AMS multicolor? (from multicolor_union — face_colors on one solid)
+    # AMS multicolor: prefer the SEPARATE part solids (from multicolor_union) — the
+    # only thing Bambu/Orca map to filament slots — over per-face colors on a merge.
+    parts = (getattr(mesh, "metadata", None) or {}).get("studio3d_parts")
     palette, _idx = face_color_palette(mesh)
-    multicolor = palette is not None
+    if parts:
+        palette = ["#" + _norm_hex(c).upper() for _m, c, _n in parts]
+    multicolor = bool(parts) or (palette is not None)
     # persist onto the spec so the rescanned manifest (write_manifest) carries it
     if multicolor:
         try:
             spec.multicolor = True
-            spec.palette = palette
+            spec.palette = palette or []
         except Exception:
             pass
 
@@ -304,7 +416,9 @@ def write_bundle(mesh: trimesh.Trimesh, out_dir: str, spec, report, formats: Ite
     if "stl" in fmts:
         files["stl"] = os.path.basename(export_stl(mesh, os.path.join(out_dir, "model.stl")))
     if "3mf" in fmts:
-        if multicolor:
+        if parts:
+            export_3mf_bbs(parts, os.path.join(out_dir, "model.3mf"), name=spec.name)
+        elif multicolor:
             export_3mf_painted(mesh, os.path.join(out_dir, "model.3mf"), name=spec.name)
         else:
             export_3mf(mesh, os.path.join(out_dir, "model.3mf"), color=color or "#9aa7b2", name=spec.name)

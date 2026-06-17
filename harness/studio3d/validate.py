@@ -249,13 +249,19 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
              material: str = "PLA", multicolor: bool = False,
              bed_mm: tuple[float, float, float] = (256, 256, 256),
              do_repair: bool = True, do_slice: bool = False,
-             model_path: str | None = None) -> Report:
+             model_path: str | None = None, expected_components: int = 1) -> Report:
     """Validate ``mesh`` against the print-readiness benchmark for a profile.
 
     When ``do_slice`` is set and a slicer is installed, D2 is a REAL slice-to-G-code
     pass (with print time + filament grams) rather than the proxy; otherwise D2
     falls back to the explicitly LABELED proxy so "print-ready" is never silently
     self-certified.
+
+    ``expected_components`` is the number of separate bodies the model SHOULD have
+    (1 for a normal single part; the part count for an assembly). If the mesh has
+    MORE disconnected pieces than expected, the part is in detached/levitating
+    fragments — a defect that is watertight+manifold per-piece yet not print-ready.
+    This is a hard gate so a floating backrest or levitating letters can't score 100.
     """
     prof = PRINTER_PROFILES.get(printer_profile, PRINTER_PROFILES[DEFAULT_PROFILE])
     rep = Report()
@@ -272,6 +278,7 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
     euler = int(mesh.euler_number)
     n_components = _component_count(mesh)
     genus = _genus_estimate(euler, n_components)
+    components_ok = n_components <= max(1, int(expected_components))
     d1_pass = watertight and winding and is_volume and (nm_edges == 0)
     rep.dimensions["D1_mesh_integrity"] = {
         "pass": d1_pass,
@@ -282,6 +289,8 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
         "self_intersections": selfint,
         "euler_number": euler,
         "n_components": n_components,
+        "expected_components": int(expected_components),
+        "single_connected": components_ok,
         "genus": genus,
     }
     if not watertight:
@@ -290,6 +299,11 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
         rep.issues.append("D1: inconsistent face winding/normals — normals not all outward")
     if nm_edges and nm_edges > 0:
         rep.issues.append(f"D1: {nm_edges} non-manifold edges detected")
+    if not components_ok:
+        rep.issues.append(
+            f"D1: model is in {n_components} disconnected pieces (expected ≤ {expected_components}) — "
+            f"parts are detached/levitating, not one solid; union them or increase overlap so they fuse"
+        )
 
     # ---- core metrics ----
     extents = [round(float(x), 2) for x in mesh.extents]
@@ -415,6 +429,8 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
         "euler_number": euler,
         "genus": genus,
         "n_components": n_components,
+        "expected_components": int(expected_components),
+        "single_connected": components_ok,
         "volume_mm3": round(volume_mm3, 2),
         "bbox_mm": extents,
         "triangles": int(len(mesh.faces)),
@@ -426,13 +442,16 @@ def validate(mesh: trimesh.Trimesh, printer_profile: str = DEFAULT_PROFILE,
     }
 
     # ---- scoring ----
+    # the components gate is part of D1's integrity score: a detached/levitating
+    # model is NOT print-ready even though each fragment is watertight.
+    d1_full = d1_pass and components_ok
     score = 0
-    score += 45 if d1_pass else (20 if watertight else 0)
+    score += 45 if d1_full else (20 if (watertight and components_ok) else 0)
     score += 25 if d2_pass else 0
     score += 20 if d3_pass else (10 if bed_fit else 0)
     score += 10  # D4 always satisfiable locally
     rep.score = int(score)
-    rep.print_ready = bool(d1_pass and d2_pass and bed_fit)
+    rep.print_ready = bool(d1_pass and components_ok and d2_pass and bed_fit)
     return rep
 
 

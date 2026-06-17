@@ -22,10 +22,15 @@ React + three.js preview UI.
 aesthetics — their saturated home turf — but on the properties a diffusion-mesh cloud
 tool is *architecturally barred* from matching. See `docs/V3-COMPETE-WITH-MESHY.md`.
 
-- **Real slice-to-G-code D2.** Print-readiness is no longer a proxy: `studio3d slice`
-  drives a detected OrcaSlicer/PrusaSlicer/Bambu/Cura headless to produce real G-code
-  with print time + filament grams. With no slicer installed it falls back to an
-  **explicitly labeled** proxy — "print-ready" is never silently self-certified.
+- **Real slice-to-G-code D2 (verified).** `studio3d slice` / `validate --slice` drives a
+  detected OrcaSlicer/Bambu/PrusaSlicer/Cura headless to produce real G-code with **real
+  print time + filament grams** — verified end-to-end against Bambu Studio 2.7.1 (e.g.
+  "25m 43s, 3.5 g"). With no slicer it falls back to an **explicitly labeled** proxy
+  (`d2_method`), so "print-ready" is never silently self-certified.
+- **Packaged cross-OS slicer setup.** `studio3d slicer status` detects the OS/arch and any
+  installed slicer (native / AppImage / .app / flatpak); `studio3d slicer install` gives the
+  exact per-OS recipe (OrcaSlicer AppImage on Linux, `brew --cask` on macOS, `winget` on
+  Windows) and performs it with `--yes`.
 - **Forever-editable parametric source.** Every bundle ships `model.py` + `params.json`.
   Change one knob (`studio3d tweak --set wall=3`) and regenerate deterministically. A
   Meshy mesh has no knobs to turn.
@@ -36,19 +41,34 @@ tool is *architecturally barred* from matching. See `docs/V3-COMPETE-WITH-MESHY.
   defects invisible in a 4-view image), with an anti-stagnation `escalate` verdict.
 - **Heal-the-generative-path.** Any generative mesh is forced through repair + a
   manifold round-trip toward a watertight solid before validation.
-- **Per-face AMS multicolor from one CSG union.** `paint()` each part and combine with
-  `multicolor_union(...)` → a single watertight solid whose 3MF carries per-triangle color
-  groups mapped to AMS filament slots (and a colored GLB). Meshy can't emit AMS-mapped color.
+- **Per-part AMS multicolor from one CSG union.** `paint()` each part and combine with
+  `multicolor_union(...)`. The exporter writes the **Bambu/Orca native format** — separate
+  objects with per-object `extruder` (filament) assignment in `model_settings.config` plus
+  an N-filament `project_settings.config` built from Bambu's own template — **not** core-3MF
+  colorgroups (which Bambu ignored: "no filament colors found"). The per-object filament
+  routing is **verified to survive a Bambu Studio round-trip** (objects → deduped slots
+  1,2,3…). Open in Bambu/Orca with a printer selected to map parts to AMS slots; identical
+  part colors dedupe to one slot. (Headless GUI color *display* isn't scriptable here, so
+  that last visual step is confirmed by opening the file, not in CI.)
 - **Faceted STEP export** (`studio3d step`, or `--formats …,step`) — a dependency-free
-  AP214 `MANIFOLD_SOLID_BREP` that imports as a solid into Fusion/FreeCAD/SolidWorks/Onshape
-  (no OCP kernel needed on CPython 3.14).
+  AP214 `MANIFOLD_SOLID_BREP` (no OCP kernel needed on CPython 3.14). The output is
+  **structurally verified** (sewn closed shell, consistent orientation, coplanar faces);
+  acceptance by a specific CAD kernel is best-effort and not yet round-trip-confirmed in
+  Fusion/SolidWorks here.
 - **Assemblies.** Multi-part design plans with `mates`, a single `clearance_mm` knob,
   and an automated `interference()` collision check.
 - **DFAM/CSG domain knowledge base** (`studio3d kb`) grounds authoring in documented rules.
-- **Internal MUSE benchmark** (`studio3d muse`) — **scores 100/100** across all five
-  cascade dimensions (vs the 2026 MUSE generative cascade of 68→54→42→35→28).
+- **Disconnected-part gate.** `print_ready` fails when a model that should be one solid
+  comes out in detached/levitating pieces (`n_components` > expected) — a watertight-per-
+  piece model is *not* print-ready if it's in fragments.
+- **Internal fabrication-reliability self-check** (`studio3d muse`). **This is NOT the MUSE
+  benchmark** and its number is not comparable to it: it runs *bundled reference scripts*
+  (the answer key) through fabricate→validate and reports how reliably the deterministic
+  kernel + validator produce print-passing solids. It measures *pipeline reliability*, not
+  text→CAD generation quality (the hard part — turning a prompt into geometry — is done by
+  the agent, and a blind held-out eval is the honest measure of that).
 - **Browser Customizer.** The viewer surfaces the parametric knobs, the certificate, the
-  source, and the real-slice result; regenerate and watch it update live.
+  source, palette, and the real-slice result; regenerate and watch it update live.
 
 ## Why this design
 
@@ -205,7 +225,7 @@ studio3d certify output/my-part --approve     # human sign-off in the certificat
 
 # knowledge + benchmark
 studio3d kb "overhang limit and supports"      # DFAM/CSG domain knowledge base
-studio3d muse                                   # internal MUSE print-readiness benchmark (scores 100)
+studio3d muse                                   # internal fabrication-reliability self-check (NOT the MUSE benchmark)
 ```
 
 ### Design sessions, styles & reference library (v3)

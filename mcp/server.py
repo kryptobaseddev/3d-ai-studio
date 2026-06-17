@@ -200,7 +200,7 @@ def main():
                 respond(rid, {
                     "protocolVersion": PROTOCOL,
                     "capabilities": {"tools": {}, "resources": {}},
-                    "serverInfo": {"name": "3d-studio-registry", "version": "0.4.1"},
+                    "serverInfo": {"name": "3d-studio-registry", "version": "0.4.2"},
                     "instructions": (
                         "3d-studio on-demand registry + pipeline. The /model3d and /grill-me skills are native; "
                         "everything else loads here to keep always-on cost ~0. Pull capabilities just-in-time: "
